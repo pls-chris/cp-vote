@@ -82,3 +82,10 @@ button.link{background:none;border:0;padding:0;color:var(--gold);font:inherit;te
 .updated{font-size:.8rem;color:var(--muted);margin:0}
 .stack{display:flex;flex-direction:column;gap:16px}
 .dice{font-size:.8rem;color:var(--warn);font-weight:600}
+.ex-wrap{overflow-x:auto}
+.ex{border-collapse:collapse;width:100%;table-layout:fixed;font-size:.86rem;font-variant-numeric:tabular-nums}
+.ex th,.ex td{padding:6px 8px;border-top:1px solid var(--line);text-align:left;vertical-align:top;color:var(--muted)}
+.ex th{color:var(--fg);font-weight:600}
+.ex th:first-child,.ex td:first-child{width:26%}
+.ex b{color:var(--fg);font-weight:600}
+.ex .ex-total td{color:var(--gold);font-weight:700;font-size:.95rem}
