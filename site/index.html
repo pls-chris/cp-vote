@@ -54,12 +54,7 @@
 
     <div class="box">
       <h2>Support if needed</h2>
-      <p class="sub">Tick what you are ok to play, even if it's not in your picks. If you get a slot from a tick box, you choose the class. See <button class="link" id="goto-rules">How it works</button>.</p>
-      <div class="checks">
-        <label class="check" for="vol-buff"><input type="checkbox" id="vol-buff"><span>I'm ok playing <b>buffer</b> <small>(WC, PP, SE, OL)</small></span></label>
-        <label class="check" for="vol-bard"><input type="checkbox" id="vol-bard"><span>I'm ok playing <b>bard</b> <small>(SWS, BD)</small></span></label>
-        <label class="check" for="vol-heal"><input type="checkbox" id="vol-heal"><span>I'm ok playing <b>healer</b> <small>(EE, BP)</small></span></label>
-      </div>
+      <p class="sub">Under each party type there are buffer / bard / healer boxes. Tick what you are ok to play <b>in that party type</b>, even if it's not in your picks. You can tick different things for Mage, Melee and Archer. If you get a slot from a tick box, you choose the class. See <button class="link" id="goto-rules">How it works</button>.</p>
     </div>
 
     <div class="btns">
@@ -105,12 +100,13 @@
       <div class="ex-wrap"><table class="ex">
         <thead><tr><th></th><th>Support slots</th><th>Other slots</th></tr></thead>
         <tbody>
-          <tr><td>Mage</td><td><b>6</b>: BD, SWS, OL, BP, EE, SE</td><td><b>3</b>: Nuker ×3</td></tr>
+          <tr><td>Mage</td><td><b>6</b>: BD, SWS, OL, BP, EE, SE</td><td><b>3</b>: Necro, Nuker ×2</td></tr>
           <tr><td>Melee</td><td><b>5</b>: BD, SWS, BP, WC/PP, SE/EE</td><td><b>4</b>: Tank, DD ×3</td></tr>
-          <tr><td>Archer</td><td><b>5</b>: BD, SWS, EE, BP, WC/PP</td><td><b>4</b>: Archer ×3, Tank/Archer</td></tr>
+          <tr><td>Archer</td><td><b>5</b>: BD, SWS, EE, BP, WC/PP</td><td><b>4</b>: Archer ×3, Archer / Warlock / Tank*</td></tr>
         </tbody>
       </table></div>
-      <p class="sub">If nobody picks or ticks a support, Mage starts at −18 and Melee and Archer at −15. This 3-point handicap is one empty support slot. Mage also has only 3 non-support slots, so a 4th member who wants nuker has no slot (−5). This is on purpose: a mage party really needs one more support to recruit. If enough of you pick or tick Mage supports (for example OL, BP and SE), the handicap goes away.</p>
+      <p class="sub">* A tank in the Archer / Warlock / Tank slot must sub Warlock.</p>
+      <p class="sub">If nobody picks or ticks a support, Mage starts at −18 and Melee and Archer at −15. This 3-point handicap is one empty support slot. Mage also has only 3 non-support slots: one Necro and two Nuker (Sorc, SpS, SH). A 2nd member who wants Necro, or a 3rd who wants Sorc / SpS / SH, has no slot from that pick. This is on purpose: a mage party really needs one more support to recruit. If enough of you pick or tick Mage supports (for example OL, BP and SE), the handicap goes away.</p>
 
       <h3>Can a party type with fewer votes still win?</h3>
       <p class="sub">Yes. The type vote is only one part of the score. A party type that everybody wants can still lose if the class picks don't fit its slots, because empty supports and members without a slot cost points. The page picks the party type you want <b>and</b> can actually fill.</p>
@@ -129,9 +125,9 @@
 
       <h3>The buffer / bard / healer boxes</h3>
       <ul class="rules">
-        <li>With a tick you can be placed in an empty slot of the group you ticked. That slot adds <b>0</b>, but the party type avoids the <b>−3</b> of the empty slot.</li>
+        <li>The boxes are <b>per party type</b>. A tick under Melee counts only for Melee. With a tick you can be placed in an empty slot of the group you ticked, in that party type. That slot adds <b>0</b>, but the party type avoids the <b>−3</b> of the empty slot.</li>
         <li>A tick does <b>not</b> put you in support for sure. If your <b>1st</b> pick is free, you stay there: your pick adds +3 to the party type, and filling the gap would also give +3 (the −3 goes away). On a tie your own pick is kept.</li>
-        <li>If only your <b>2nd or 3rd</b> pick is free (+2 or +1 to the party type), you go to support, because filling the gap is worth more to the party type (+3).</li>
+        <li>If only your <b>2nd or 3rd</b> pick is free, you go to support. Your 2nd or 3rd pick would add +2 or +1, but filling an empty support slot removes its −3, which is the same as +3. So the party type's total is higher with you in support. This works the same in every party type.</li>
         <li>If there is no slot from your picks at all, you go to support, and the party type avoids the −5.</li>
         <li>If you get a slot from a tick box, <b>you choose the class</b> from the open slots of that group. Whatever is left, we recruit. If two volunteers are in the same group, you agree between you.</li>
       </ul>
@@ -156,12 +152,13 @@
       <div class="ex-wrap"><table class="ex">
         <thead><tr><th></th><th>Θέσεις support</th><th>Άλλες θέσεις</th></tr></thead>
         <tbody>
-          <tr><td>Mage</td><td><b>6</b>: BD, SWS, OL, BP, EE, SE</td><td><b>3</b>: Nuker ×3</td></tr>
+          <tr><td>Mage</td><td><b>6</b>: BD, SWS, OL, BP, EE, SE</td><td><b>3</b>: Necro, Nuker ×2</td></tr>
           <tr><td>Melee</td><td><b>5</b>: BD, SWS, BP, WC/PP, SE/EE</td><td><b>4</b>: Tank, DD ×3</td></tr>
-          <tr><td>Archer</td><td><b>5</b>: BD, SWS, EE, BP, WC/PP</td><td><b>4</b>: Archer ×3, Tank/Archer</td></tr>
+          <tr><td>Archer</td><td><b>5</b>: BD, SWS, EE, BP, WC/PP</td><td><b>4</b>: Archer ×3, Archer / Warlock / Tank*</td></tr>
         </tbody>
       </table></div>
-      <p class="sub">Αν κανείς δεν διαλέξει ή τσεκάρει support, το Mage ξεκινάει από −18 και τα Melee και Archer από −15. Αυτό το μειονέκτημα των 3 πόντων είναι μία κενή θέση support. Το Mage έχει επίσης μόνο 3 θέσεις που δεν είναι support, οπότε ένα 4ο μέλος που θέλει nuker μένει χωρίς θέση (−5). Είναι σκόπιμο: ένα mage party χρειάζεται πραγματικά να ψάξει ένα support παραπάνω. Αν αρκετοί από εσάς διαλέξετε ή τσεκάρετε support για το Mage (π.χ. OL, BP και SE), το μειονέκτημα φεύγει.</p>
+      <p class="sub">* Ένας tank στη θέση Archer / Warlock / Tank πρέπει να κάνει sub Warlock.</p>
+      <p class="sub">Αν κανείς δεν διαλέξει ή τσεκάρει support, το Mage ξεκινάει από −18 και τα Melee και Archer από −15. Αυτό το μειονέκτημα των 3 πόντων είναι μία κενή θέση support. Το Mage έχει επίσης μόνο 3 θέσεις που δεν είναι support: μία Necro και δύο Nuker (Sorc, SpS, SH). Ένα 2ο μέλος που θέλει Necro, ή ένα 3ο που θέλει Sorc / SpS / SH, δεν βρίσκει θέση από αυτή την επιλογή. Είναι σκόπιμο: ένα mage party χρειάζεται πραγματικά να ψάξει ένα support παραπάνω. Αν αρκετοί από εσάς διαλέξετε ή τσεκάρετε support για το Mage (π.χ. OL, BP και SE), το μειονέκτημα φεύγει.</p>
 
       <h3>Μπορεί να κερδίσει τύπος party με λιγότερες ψήφους;</h3>
       <p class="sub">Ναι. Η ψήφος τύπου είναι μόνο ένα κομμάτι του σκορ. Ένας τύπος party που τον θέλουν όλοι μπορεί να χάσει αν οι επιλογές class δεν ταιριάζουν στις θέσεις του, γιατί τα κενά support και τα μέλη χωρίς θέση κοστίζουν πόντους. Η σελίδα διαλέγει τον τύπο party που θέλετε <b>και</b> μπορείτε πραγματικά να γεμίσετε.</p>
@@ -180,9 +177,9 @@
 
       <h3>Τα κουτάκια buffer / bard / healer</h3>
       <ul class="rules">
-        <li>Με τικ μπορείς να μπεις σε κενή θέση της ομάδας που τσέκαρες. Η θέση αυτή δίνει <b>0</b> πόντους, αλλά ο τύπος party γλιτώνει το <b>−3</b> του κενού.</li>
+        <li>Τα κουτάκια είναι <b>ανά τύπο party</b>. Ένα τικ κάτω από το Melee μετράει μόνο για το Melee. Με τικ μπορείς να μπεις σε κενή θέση της ομάδας που τσέκαρες, σε αυτόν τον τύπο party. Η θέση αυτή δίνει <b>0</b> πόντους, αλλά ο τύπος party γλιτώνει το <b>−3</b> του κενού.</li>
         <li>Το τικ <b>δεν</b> σε βάζει σίγουρα σε support. Αν είναι ελεύθερη η <b>1η</b> σου επιλογή, μένεις εκεί: η επιλογή σου δίνει +3 στον τύπο party, και το κενό που θα γέμιζες δίνει επίσης +3 (φεύγει το −3). Στην ισοπαλία κρατιέται η επιλογή σου.</li>
-        <li>Αν ελεύθερη είναι μόνο η <b>2η ή 3η</b> σου επιλογή (+2 ή +1 στον τύπο party), μπαίνεις σε support, γιατί το κενό που γεμίζεις αξίζει περισσότερο στον τύπο party (+3).</li>
+        <li>Αν ελεύθερη είναι μόνο η <b>2η ή 3η</b> σου επιλογή, μπαίνεις σε support. Η 2η ή 3η επιλογή σου θα έδινε +2 ή +1, ενώ αν γεμίσεις μια κενή θέση support φεύγει το −3 της, που είναι σαν +3. Άρα το σύνολο του τύπου party βγαίνει μεγαλύτερο με εσένα σε support. Αυτό ισχύει το ίδιο σε κάθε τύπο party.</li>
         <li>Αν δεν υπάρχει θέση από τις επιλογές σου, μπαίνεις σε support και ο τύπος party γλιτώνει το −5.</li>
         <li>Αν μπεις σε θέση από κουτάκι, <b>διαλέγεις εσύ το class</b> από τις θέσεις της ομάδας που είναι ακόμα ανοιχτές. Όσα μείνουν, τα ψάχνουμε. Αν είναι δύο εθελοντές στην ίδια ομάδα, τα βρίσκετε μεταξύ σας.</li>
       </ul>

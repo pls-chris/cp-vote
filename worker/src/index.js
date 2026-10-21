@@ -20,7 +20,7 @@ const DDS = ["Gladiator", "Warlord", "Treasure Hunter", "Plains Walker", "Abyss 
 // must match site/app.js
 const COMP_CLASSES = {
   mage: new Set([...NUKERS, "Bladedancer", "Swordsinger", "Overlord", "Bishop", "Elven Elder", "Shillien Elder"]),
-  archer: new Set([...ARCHERS, ...TANKS, "Bladedancer", "Swordsinger", "Elven Elder", "Bishop", "Warcryer", "Prophet"]),
+  archer: new Set([...ARCHERS, ...TANKS, "Warlock", "Bladedancer", "Swordsinger", "Elven Elder", "Bishop", "Warcryer", "Prophet"]),
   melee: new Set([...DDS, ...TANKS, "Bladedancer", "Swordsinger", "Bishop", "Warcryer", "Prophet", "Shillien Elder", "Elven Elder"]),
 };
 const TYPES = ["mage", "melee", "archer"];
@@ -90,8 +90,16 @@ function cleanVote(body, member) {
     if (!p.every(c => typeof c === "string" && COMP_CLASSES[t].has(c))) throw new Error(`Unknown class in the ${t} picks.`);
     picks[t] = p;
   }
+  // support boxes per party type: { mage:{buff,bard,heal}, melee:{...}, archer:{...} }
+  // an older page sends one {buff,bard,heal} set: apply it to all three types
+  const src = volIn && typeof volIn === "object" ? volIn : {};
+  const legacy = VOL_KEYS.some(k => k in src);
   const vol = {};
-  for (const k of VOL_KEYS) vol[k] = !!(volIn && typeof volIn === "object" && volIn[k]);
+  for (const t of TYPES) {
+    const g = legacy ? src : (src[t] && typeof src[t] === "object" ? src[t] : {});
+    vol[t] = {};
+    for (const k of VOL_KEYS) vol[t][k] = !!g[k];
+  }
   return { name: member, rank, picks, vol, ts: Date.now() };
 }
 
