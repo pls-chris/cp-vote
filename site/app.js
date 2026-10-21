@@ -1,7 +1,7 @@
 /* CP Lineup Vote - Christoforos Pliatsikas */
 "use strict";
 
-let MEMBERS = ["kOsA","Ankalime","turambar","morrax","sinook","gx"]; // replaced by the server list
+let MEMBERS = ["kOsA","Ankalime","turambar","morrax","sinook","gx","morgx"]; // replaced by the server list
 const TYPES = [{id:"mage",name:"Mage"},{id:"melee",name:"Melee"},{id:"archer",name:"Archer"}];
 const ABBR = {"Bladedancer":"BD","Swordsinger":"SWS","Overlord":"OL","Bishop":"BP","Elven Elder":"EE","Shillien Elder":"SE","Warcryer":"WC","Prophet":"PP"};
 const SUPPORTS = Object.keys(ABBR);
@@ -28,6 +28,8 @@ const COMP_TEXT = {
   melee:"BD · SWS · BP · WC/PP · SE/EE · Tank · 3 DD (summoner, spoiler, crafter OK)"
 };
 const PICK_PTS=[3,2,1], TYPE_PTS=[3,2,1], GAP=3, UNPLACED=5;
+/* lineup priority: 1) fewest members without a slot  2) most members on a top pick  3) highest points */
+const PRIO_SLOT=10000, PRIO_TOP=100;
 const ORD=["1st","2nd","3rd"];
 const POLL_MS=15000;
 const API=String(window.CP_API||"").replace(/\/+$/,"");
@@ -45,6 +47,7 @@ const volOf = (v,comp) => {
   if(VOL_KEYS.some(k=>k in x)) return x;                             // older votes: one set for all types
   return v.support?{buff:true,bard:true,heal:true}:{};
 };
+const eqOf = (v,comp) => !!(v.eq&&v.eq[comp]);  // "1st = 2nd" box
 const volClasses = (v,comp) => {const g=volOf(v,comp);return Object.keys(GROUPS).filter(k=>g[k]).flatMap(k=>GROUPS[k].cls)};
 const store = {
   get(k){try{return localStorage.getItem(k)}catch(e){return null}},
@@ -84,6 +87,7 @@ function buildForm(){
     const groups=[["Support",valid.filter(c=>SUPPORTS.includes(c))],["Nuker",valid.filter(c=>NUKERS.includes(c))],["Archer",valid.filter(c=>ARCHERS.includes(c))],["Tank",valid.filter(c=>TANKS.includes(c))],["DD / Summoner / Dwarf",valid.filter(c=>DDS.includes(c))]].filter(g=>g[1].length);
     const box=document.createElement("div");box.className="box";
     box.innerHTML=`<h2><span class="tag t-${t.id}"></span>If we go ${t.name}</h2><p class="slots">${COMP_TEXT[t.id]}</p><div class="grid3"></div>
+      <label class="check" for="eq-${t.id}"><input type="checkbox" id="eq-${t.id}"><span>My <b>1st and 2nd pick are equal</b> for me. Put me where the party needs me more.</span></label>
       <p class="sub">Support if needed in ${t.name}:</p>
       <div class="checks">${VOL_KEYS.map(k=>`<label class="check" for="vol-${t.id}-${k}"><input type="checkbox" id="vol-${t.id}-${k}"><span>I'm ok playing <b>${GROUPS[k].name}</b> <small>(${GROUPS[k].cls.filter(c=>COMPS[t.id].some(s=>s.a.includes(c))).map(c=>ABBR[c]).join(", ")})</small></span></label>`).join("")}</div>`;
     const g=box.querySelector(".grid3");
@@ -105,7 +109,7 @@ function buildForm(){
 function fillForm(v){
   v.rank.forEach((r,i)=>$("rank"+i).value=r);
   TYPES.forEach(t=>[0,1,2].forEach(i=>$(`pick-${t.id}-${i}`).value=(v.picks[t.id]||[])[i]||""));
-  TYPES.forEach(t=>{const g=volOf(v,t.id);VOL_KEYS.forEach(k=>$(`vol-${t.id}-${k}`).checked=!!g[k])});
+  TYPES.forEach(t=>{const g=volOf(v,t.id);VOL_KEYS.forEach(k=>$(`vol-${t.id}-${k}`).checked=!!g[k]);$(`eq-${t.id}`).checked=eqOf(v,t.id)});
   $("voter-hint").textContent="Your saved vote is loaded. Change it and submit again to update.";
 }
 function readForm(){
@@ -123,7 +127,8 @@ function readForm(){
     picks[t.id]=p;
   }
   const vol={};TYPES.forEach(t=>{vol[t.id]={};VOL_KEYS.forEach(k=>vol[t.id][k]=$(`vol-${t.id}-${k}`).checked)});
-  return {name,partyKey,vote:{rank,picks,vol}};
+  const eq={};TYPES.forEach(t=>eq[t.id]=$(`eq-${t.id}`).checked);
+  return {name,partyKey,vote:{rank,picks,vol,eq}};
 }
 function validVote(v){
   if(!v||typeof v!=="object"||!MEMBERS.includes(v.name)) return false;
@@ -159,9 +164,13 @@ function solve(comp,votes){
   const tp=v=>TYPE_PTS[v.rank.indexOf(comp)];
   const opts=votes.map(v=>{
     const o=[];
-    (v.picks[comp]||[]).forEach((cls,k)=>slots.forEach((s,j)=>{if(s.a.includes(cls))o.push({j,cls,rank:k,pts:PICK_PTS[k]+((s.b&&s.b[cls])||0)})}));
+    const eq=eqOf(v,comp);
+    (v.picks[comp]||[]).forEach((cls,k)=>{
+      const eff=(eq&&k===1)?0:k;               // with "1st = 2nd" the 2nd pick counts as a 1st pick
+      slots.forEach((s,j)=>{if(s.a.includes(cls))o.push({j,cls,rank:k,eff,top:eff===0,pts:PICK_PTS[eff]+((s.b&&s.b[cls])||0)})});
+    });
     const vc=volClasses(v,comp);
-    supIdx.forEach(j=>{if(slots[j].a.some(c=>vc.includes(c))&&!o.some(x=>x.j===j))o.push({j,cls:null,rank:-1,pts:0,vol:true})});
+    supIdx.forEach(j=>{if(slots[j].a.some(c=>vc.includes(c))&&!o.some(x=>x.j===j))o.push({j,cls:null,rank:-1,eff:3,top:false,pts:0,vol:true})});
     return o;
   });
   const memo=new Map();
@@ -170,11 +179,12 @@ function solve(comp,votes){
     let res;
     if(i===votes.length){res={val:-GAP*supIdx.filter(j=>!(mask&(1<<j))).length,ch:[]}}
     else{
-      const nx=f(i+1,mask); res={val:nx.val-UNPLACED,ch:[null,...nx.ch]};
+      const nx=f(i+1,mask); res={val:nx.val-UNPLACED-PRIO_SLOT,ch:[null,...nx.ch]};
       for(const o of opts[i]){
         if(mask&(1<<o.j)) continue;
-        /* tie-break only (max 0.081, never beats a real 0.5 point): better picks go to whoever ranked this party type higher */
-        const r=f(i+1,mask|(1<<o.j)); const val=r.val+o.pts+0.001*tp(votes[i])*(o.vol?0.5:3-o.rank);
+        /* PRIO_TOP protects top picks; the 0.001 part is only a tie-break (max 0.081, never beats a real 0.5 point):
+           better picks go to whoever ranked this party type higher */
+        const r=f(i+1,mask|(1<<o.j)); const val=r.val+o.pts+(o.top?PRIO_TOP:0)+0.001*tp(votes[i])*(o.vol?0.5:3-o.eff);
         if(val>res.val+1e-9) res={val,ch:[o,...r.ch]};
       }
     }
@@ -185,13 +195,13 @@ function solve(comp,votes){
   let classPts=0,unplaced=[];const unplacedIdx=[];
   best.ch.forEach((o,i)=>{if(o){lineup[o.j].who={name:votes[i].name,vote:votes[i],i,...o};classPts+=o.pts}else{unplaced.push(votes[i].name);unplacedIdx.push(i)}});
   /* full ties: two members could swap slots with the same points and the same party type rank -> settle with /dice */
-  const bestOpt=(i,j)=>opts[i].filter(o=>o.j===j&&!o.vol).sort((a,b)=>b.pts-a.pts)[0];
+  const bestOpt=(i,j)=>opts[i].filter(o=>o.j===j&&!o.vol).sort((a,b)=>(b.top-a.top)||(b.pts-a.pts))[0];
   for(let j1=0;j1<lineup.length;j1++) for(let j2=j1+1;j2<lineup.length;j2++){
     const A=lineup[j1].who,B=lineup[j2].who;
     if(!A||!B||A.vol||B.vol||lineup[j1].slot.l===lineup[j2].slot.l) continue;
     if(tp(A.vote)!==tp(B.vote)) continue;
     const oa=bestOpt(A.i,j2),ob=bestOpt(B.i,j1);
-    if(oa&&ob&&Math.abs(oa.pts+ob.pts-A.pts-B.pts)<1e-9){
+    if(oa&&ob&&oa.top+ob.top===A.top+B.top&&Math.abs(oa.pts+ob.pts-A.pts-B.pts)<1e-9){
       (A.dice=A.dice||[]).push(B.name);(B.dice=B.dice||[]).push(A.name);
     }
   }
@@ -199,7 +209,7 @@ function solve(comp,votes){
   unplacedIdx.forEach(u=>lineup.forEach((x,j)=>{
     const A=x.who; if(!A||A.vol||tp(A.vote)!==tp(votes[u])) return;
     const ou=bestOpt(u,j);
-    if(ou&&Math.abs(ou.pts-A.pts)<1e-9){(A.dice=A.dice||[]).push(votes[u].name);unplacedTies.push(`${votes[u].name} vs ${A.name} for ${x.slot.l}`)}
+    if(ou&&ou.top===A.top&&Math.abs(ou.pts-A.pts)<1e-9){(A.dice=A.dice||[]).push(votes[u].name);unplacedTies.push(`${votes[u].name} vs ${A.name} for ${x.slot.l}`)}
   }));
   lineup.forEach(x=>{
     if(!x.who||!x.who.vol) return;
@@ -247,7 +257,7 @@ function render(){
       const w=x.who;
       const what=w.vol
         ?`<span class="vol">volunteer ${esc(w.groupName)} · chooses from: ${esc(w.choices.join(", "))}</span>`
-        :`${esc(label(w.cls))} · <span class="vol">${ORD[w.rank]} pick</span>`;
+        :`${esc(label(w.cls))} · <span class="vol">${ORD[w.rank]} pick${w.rank===1&&w.eff===0?" (= 1st)":""}</span>`;
       const slotLabel=w.vol?"Support":x.slot.l;
       const note=(!w.vol&&x.slot.note&&x.slot.note.cls.includes(w.cls))?`<br><span class="dice">${esc(x.slot.note.text)}</span>`:"";
       const dice=w.dice?`<br><span class="dice">tie with ${esc(w.dice.join(", "))} · roll /dice for this slot</span>`:"";
@@ -257,9 +267,10 @@ function render(){
     ${r.lineup.some(x=>x.who&&x.who.vol)?`<p class="sub">The empty support slots change depending on the class the volunteer chooses.</p>`:""}
   </div>`).join("");
   out.innerHTML=html;
+  const pickTxt=(v,c)=>{const p=v.picks[c].map(x=>esc(ABBR[x]||x));return eqOf(v,c)&&p.length>1?p[0]+" = "+p[1]+(p[2]?", "+p[2]:""):p.join(", ")};
   const volTxt=(v,c)=>{const g=volOf(v,c);const t=VOL_KEYS.filter(k=>g[k]).map(k=>GROUPS[k].name);return t.length?`<br><span class="vol">+ ${esc(t.join(", "))}</span>`:""};
   $("votes-table").innerHTML=`<table class="votes"><thead><tr><th>Member</th><th>Type order</th><th>Mage</th><th>Melee</th><th>Archer</th></tr></thead><tbody>${
-    votes.sort((a,b)=>MEMBERS.indexOf(a.name)-MEMBERS.indexOf(b.name)).map(v=>`<tr><td><b>${esc(v.name)}</b></td><td>${v.rank.map(name).join(" › ")}</td>${["mage","melee","archer"].map(c=>`<td>${v.picks[c].map(x=>esc(ABBR[x]||x)).join(", ")}${volTxt(v,c)}</td>`).join("")}</tr>`).join("")
+    votes.sort((a,b)=>MEMBERS.indexOf(a.name)-MEMBERS.indexOf(b.name)).map(v=>`<tr><td><b>${esc(v.name)}</b></td><td>${v.rank.map(name).join(" › ")}</td>${["mage","melee","archer"].map(c=>`<td>${pickTxt(v,c)}${volTxt(v,c)}</td>`).join("")}</tr>`).join("")
   }</tbody></table>`;
 }
 

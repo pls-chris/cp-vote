@@ -87,14 +87,27 @@
       <ul class="rules">
         <li>Party type vote: each member's ranking adds <b>3 / 2 / 1</b> to the three party types.</li>
         <li>Class picks: for each party type, every member is placed in a slot from his own picks. A 1st pick adds <b>3</b> to that party type, a 2nd <b>2</b>, a 3rd <b>1</b>. WC in a WC / PP slot adds <b>+0.5</b> more.</li>
-        <li>Each lineup is built to give its party type the highest total.</li>
-        <li><b>Same slot as 1st pick</b> (for example one picks TK and the other Paladin, both go in the Tank slot): the slot goes to <b>whoever ranked that party type higher</b>. The other moves to his next pick. If both ranked that party type the same, the page shows <b>roll /dice</b> next to both names and you roll in game.</li>
-        <li>Exception: if his 2nd pick has no free slot but yours does, the slot goes to him and you take your 2nd pick. The total is higher this way, and nobody drops to a 3rd pick or ends up without a slot when it can be avoided.</li>
+        <li>Each lineup is built in this order of priority:
+          <ol>
+            <li><b>As few members without a slot as possible.</b></li>
+            <li><b>As many members as possible on their 1st pick.</b> If your 1st pick's slot is free, you get it. A support in your 2nd or 3rd pick, or a tick box, never moves you away from a free 1st pick.</li>
+            <li><b>Then the highest total points.</b> This is where empty support slots (−3) matter.</li>
+          </ol></li>
+        <li><b>Same slot as 1st pick</b> (for example one picks TK and the other Paladin, both go in the Tank slot): only one can have it. The slot goes to <b>whoever ranked that party type higher</b>, and the other moves to his next pick. If both ranked that party type the same, the page shows <b>roll /dice</b> next to both names and you roll in game.</li>
+        <li>Exception: if his next pick has no free slot but yours does, the slot goes to him and you take your next pick. This way nobody ends up without a slot, or on a 3rd pick, when it can be avoided.</li>
         <li>Each support slot left empty: <b>−3</b> to that party type, because supports are hard to find.</li>
         <li>Each member who fits in no slot from his picks: <b>−5</b> to that party type.</li>
         <li>On equal totals, the party type with fewer empty support slots wins. If still equal, the one with more party type vote points wins.</li>
         <li>The empty slots of the winning party type are the classes we recruit.</li>
       </ul>
+      <h3>The "1st and 2nd pick are equal" box</h3>
+      <ul class="rules">
+        <li>Each party type has this box. Tick it if your 1st and 2nd pick really don't matter to you.</li>
+        <li>Then <b>both count as a 1st pick</b>: both are protected and both add <b>+3</b>.</li>
+        <li>The page puts you where the party needs you more. If one of them fills a slot that would cost points when empty (a support, −3), you go there. If you can free your 1st pick's slot for someone who has it as his own 1st pick, you move to your 2nd. If nothing changes, you keep your 1st pick.</li>
+      </ul>
+      <p class="sub">Example (Mage): Ankalime picks SpS, then Necro. turambar picks SH. gx picks Sorc, then BP. There are only two Nuker slots, so without the box gx goes to BP (his 2nd pick). If Ankalime ticks the box, he moves to Necro and gx gets Sorc, his 1st pick. BP then goes to the recruit list.</p>
+
       <h3>Supports per party type</h3>
       <p class="sub">The party types don't need the same number of supports. Each empty support slot is −3, so a party type with more supports starts further behind when nobody picks them.</p>
       <div class="ex-wrap"><table class="ex">
@@ -126,7 +139,7 @@
       <h3>The buffer / bard / healer boxes</h3>
       <ul class="rules">
         <li>The boxes are <b>per party type</b>. A tick under Melee counts only for Melee. With a tick you can be placed in an empty slot of the group you ticked, in that party type. That slot adds <b>0</b>, but the party type avoids the <b>−3</b> of the empty slot.</li>
-        <li>A tick does <b>not</b> put you in support for sure. If your <b>1st</b> pick is free, you stay there: your pick adds +3 to the party type, and filling the gap would also give +3 (the −3 goes away). On a tie your own pick is kept.</li>
+        <li>A tick does <b>not</b> put you in support for sure. If your <b>1st</b> pick's slot is free, you always stay there, because the 1st pick is protected.</li>
         <li>If only your <b>2nd or 3rd</b> pick is free, you go to support. Your 2nd or 3rd pick would add +2 or +1, but filling an empty support slot removes its −3, which is the same as +3. So the party type's total is higher with you in support. This works the same in every party type.</li>
         <li>If there is no slot from your picks at all, you go to support, and the party type avoids the −5.</li>
         <li>If you get a slot from a tick box, <b>you choose the class</b> from the open slots of that group. Whatever is left, we recruit. If two volunteers are in the same group, you agree between you.</li>
@@ -139,14 +152,27 @@
       <ul class="rules">
         <li>Ψήφος τύπου party: η σειρά κάθε μέλους δίνει <b>3 / 2 / 1</b> πόντους στους τρεις τύπους party.</li>
         <li>Επιλογές class: σε κάθε τύπο party, κάθε μέλος μπαίνει σε θέση από τις δικές του επιλογές. Η 1η επιλογή δίνει <b>3</b> πόντους σε αυτόν τον τύπο party, η 2η <b>2</b>, η 3η <b>1</b>. Ο WC σε θέση WC / PP δίνει <b>+0.5</b> επιπλέον.</li>
-        <li>Κάθε lineup στήνεται ώστε ο τύπος party να βγάζει το μεγαλύτερο σύνολο.</li>
-        <li><b>Ίδια θέση ως 1η επιλογή</b> (π.χ. ο ένας διαλέγει TK και ο άλλος Paladin, και οι δύο μπαίνουν στη θέση Tank): τη θέση την παίρνει <b>όποιος έχει βάλει αυτόν τον τύπο party πιο ψηλά</b>. Ο άλλος πάει στην επόμενη επιλογή του. Αν τον έχουν βάλει και οι δύο στην ίδια θέση, η σελίδα γράφει <b>roll /dice</b> δίπλα στα δύο ονόματα και ρίχνετε ζάρι in game.</li>
-        <li>Εξαίρεση: αν για τη 2η επιλογή του άλλου δεν υπάρχει ελεύθερη θέση, ενώ για τη δική σου υπάρχει, τη θέση την παίρνει αυτός και εσύ πας στη 2η επιλογή σου. Έτσι το σύνολο βγαίνει μεγαλύτερο, και κανείς δεν πέφτει στην 3η επιλογή ή μένει χωρίς θέση όταν γίνεται να αποφευχθεί.</li>
+        <li>Κάθε lineup στήνεται με αυτή τη σειρά προτεραιότητας:
+          <ol>
+            <li><b>Όσο το δυνατόν λιγότερα μέλη χωρίς θέση.</b></li>
+            <li><b>Όσο το δυνατόν περισσότερα μέλη στην 1η τους επιλογή.</b> Αν η θέση της 1ης σου επιλογής είναι ελεύθερη, την παίρνεις. Ένα support στη 2η ή 3η επιλογή σου, ή ένα κουτάκι, δεν σε βγάζει ποτέ από ελεύθερη 1η επιλογή.</li>
+            <li><b>Μετά το μεγαλύτερο σύνολο πόντων.</b> Εδώ μετράνε οι κενές θέσεις support (−3).</li>
+          </ol></li>
+        <li><b>Ίδια θέση ως 1η επιλογή</b> (π.χ. ο ένας διαλέγει TK και ο άλλος Paladin, και οι δύο μπαίνουν στη θέση Tank): μόνο ένας μπορεί να την πάρει. Την παίρνει <b>όποιος έχει βάλει αυτόν τον τύπο party πιο ψηλά</b>, και ο άλλος πάει στην επόμενη επιλογή του. Αν τον έχουν βάλει και οι δύο στην ίδια θέση, η σελίδα γράφει <b>roll /dice</b> δίπλα στα δύο ονόματα και ρίχνετε ζάρι in game.</li>
+        <li>Εξαίρεση: αν για την επόμενη επιλογή του άλλου δεν υπάρχει ελεύθερη θέση, ενώ για τη δική σου υπάρχει, τη θέση την παίρνει αυτός και εσύ πας στην επόμενη επιλογή σου. Έτσι κανείς δεν μένει χωρίς θέση, ή σε 3η επιλογή, όταν γίνεται να αποφευχθεί.</li>
         <li>Κάθε θέση support που μένει κενή: <b>−3</b> στον τύπο party, γιατί τα support βρίσκονται δύσκολα.</li>
         <li>Κάθε μέλος που δεν χωράει σε καμία θέση από τις επιλογές του: <b>−5</b> στον τύπο party.</li>
         <li>Σε ισοβαθμία κερδίζει ο τύπος party με τις λιγότερες κενές θέσεις support. Αν είναι πάλι ίσοι, κερδίζει αυτός με τους περισσότερους πόντους από την ψήφο τύπου party.</li>
         <li>Οι κενές θέσεις του τύπου party που κερδίζει είναι τα classes που θα ψάξουμε.</li>
       </ul>
+      <h3>Το κουτάκι «η 1η και η 2η επιλογή είναι ίσες»</h3>
+      <ul class="rules">
+        <li>Κάθε τύπος party έχει αυτό το κουτάκι. Τσέκαρέ το αν η 1η και η 2η επιλογή σου πραγματικά δεν σε νοιάζει ποια θα είναι.</li>
+        <li>Τότε <b>και οι δύο μετράνε ως 1η επιλογή</b>: προστατεύονται και οι δύο και δίνουν και οι δύο <b>+3</b>.</li>
+        <li>Η σελίδα σε βάζει εκεί που σε χρειάζεται περισσότερο το party. Αν η μία από τις δύο γεμίζει θέση που κοστίζει πόντους όταν μένει κενή (ένα support, −3), πας εκεί. Αν μπορείς να αφήσεις τη θέση της 1ης σου επιλογής σε κάποιον που την έχει δική του 1η επιλογή, πας στη 2η. Αν δεν αλλάζει τίποτα, κρατάς την 1η σου επιλογή.</li>
+      </ul>
+      <p class="sub">Παράδειγμα (Mage): ο Ankalime διαλέγει SpS και μετά Necro. Ο turambar διαλέγει SH. Ο gx διαλέγει Sorc και μετά BP. Υπάρχουν μόνο δύο θέσεις Nuker, οπότε χωρίς το κουτάκι ο gx πάει BP (η 2η του επιλογή). Αν ο Ankalime τσεκάρει το κουτάκι, πάει Necro και ο gx παίρνει Sorc, την 1η του επιλογή. Το BP τότε πάει στη λίστα που ψάχνουμε.</p>
+
       <h3>Support ανά τύπο party</h3>
       <p class="sub">Οι τύποι party δεν χρειάζονται τον ίδιο αριθμό support. Κάθε κενή θέση support είναι −3, οπότε ένας τύπος party με περισσότερα support ξεκινάει πιο πίσω όταν δεν τα διαλέγει κανείς.</p>
       <div class="ex-wrap"><table class="ex">
@@ -178,7 +204,7 @@
       <h3>Τα κουτάκια buffer / bard / healer</h3>
       <ul class="rules">
         <li>Τα κουτάκια είναι <b>ανά τύπο party</b>. Ένα τικ κάτω από το Melee μετράει μόνο για το Melee. Με τικ μπορείς να μπεις σε κενή θέση της ομάδας που τσέκαρες, σε αυτόν τον τύπο party. Η θέση αυτή δίνει <b>0</b> πόντους, αλλά ο τύπος party γλιτώνει το <b>−3</b> του κενού.</li>
-        <li>Το τικ <b>δεν</b> σε βάζει σίγουρα σε support. Αν είναι ελεύθερη η <b>1η</b> σου επιλογή, μένεις εκεί: η επιλογή σου δίνει +3 στον τύπο party, και το κενό που θα γέμιζες δίνει επίσης +3 (φεύγει το −3). Στην ισοπαλία κρατιέται η επιλογή σου.</li>
+        <li>Το τικ <b>δεν</b> σε βάζει σίγουρα σε support. Αν η θέση της <b>1ης</b> σου επιλογής είναι ελεύθερη, μένεις πάντα εκεί, γιατί η 1η επιλογή προστατεύεται.</li>
         <li>Αν ελεύθερη είναι μόνο η <b>2η ή 3η</b> σου επιλογή, μπαίνεις σε support. Η 2η ή 3η επιλογή σου θα έδινε +2 ή +1, ενώ αν γεμίσεις μια κενή θέση support φεύγει το −3 της, που είναι σαν +3. Άρα το σύνολο του τύπου party βγαίνει μεγαλύτερο με εσένα σε support. Αυτό ισχύει το ίδιο σε κάθε τύπο party.</li>
         <li>Αν δεν υπάρχει θέση από τις επιλογές σου, μπαίνεις σε support και ο τύπος party γλιτώνει το −5.</li>
         <li>Αν μπεις σε θέση από κουτάκι, <b>διαλέγεις εσύ το class</b> από τις θέσεις της ομάδας που είναι ακόμα ανοιχτές. Όσα μείνουν, τα ψάχνουμε. Αν είναι δύο εθελοντές στην ίδια ομάδα, τα βρίσκετε μεταξύ σας.</li>

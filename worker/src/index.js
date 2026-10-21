@@ -100,7 +100,11 @@ function cleanVote(body, member) {
     vol[t] = {};
     for (const k of VOL_KEYS) vol[t][k] = !!g[k];
   }
-  return { name: member, rank, picks, vol, ts: Date.now() };
+  // "1st = 2nd" box per party type
+  const eqIn = body.eq && typeof body.eq === "object" ? body.eq : {};
+  const eq = {};
+  for (const t of TYPES) eq[t] = !!eqIn[t];
+  return { name: member, rank, picks, vol, eq, ts: Date.now() };
 }
 
 function corsHeaders(env, req) {
