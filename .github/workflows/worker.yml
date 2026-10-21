@@ -1,0 +1,50 @@
+# Deploy the vote API (worker/) to Cloudflare Workers
+# Author: Christoforos Pliatsikas
+name: Deploy worker
+
+on:
+  push:
+    branches: [main]
+    paths: ["worker/**", ".github/workflows/worker.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: worker
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check settings
+        env:
+          PAGES_ORIGIN: ${{ vars.PAGES_ORIGIN }}
+          HAS_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN != '' }}
+          HAS_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID != '' }}
+          HAS_KEY: ${{ secrets.PARTY_KEY != '' }}
+          HAS_ADMIN: ${{ secrets.ADMIN_KEY != '' }}
+        run: |
+          [ "$HAS_TOKEN" = "true" ]   || { echo "::error::Secret CLOUDFLARE_API_TOKEN is missing"; exit 1; }
+          [ "$HAS_ACCOUNT" = "true" ] || { echo "::error::Secret CLOUDFLARE_ACCOUNT_ID is missing"; exit 1; }
+          [ "$HAS_KEY" = "true" ]     || { echo "::error::Secret PARTY_KEY is missing"; exit 1; }
+          [ "$HAS_ADMIN" = "true" ]   || { echo "::error::Secret ADMIN_KEY is missing"; exit 1; }
+          [ -n "$PAGES_ORIGIN" ]    || { echo "::error::Variable PAGES_ORIGIN is missing (e.g. https://yourname.github.io)"; exit 1; }
+
+      - uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: worker
+          wranglerVersion: "4.20.0"
+          command: deploy --var ALLOWED_ORIGIN:${{ vars.PAGES_ORIGIN }}
+          secrets: |
+            PARTY_KEY
+            ADMIN_KEY
+        env:
+          PARTY_KEY: ${{ secrets.PARTY_KEY }}
+          ADMIN_KEY: ${{ secrets.ADMIN_KEY }}

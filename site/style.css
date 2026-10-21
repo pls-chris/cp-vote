@@ -1,0 +1,83 @@
+/* CP Lineup Vote - Christoforos Pliatsikas */
+/* Layout: one narrow column like an in-game window; three tabs (Vote / Results / How it works), party types colour-coded. Single dark look by choice (game UI). */
+:root{
+  --bg:#12141a; --panel:#1b1e27; --panel2:#222634; --line:#323849;
+  --fg:#e8e2d2; --muted:#9c9888; --gold:#c9a45c; --gold-dim:#8a7140;
+  --mage:#82a8e3; --melee:#df7a62; --archer:#93c272;
+  --warn:#e9b44c; --bad:#e2685b; --ink:#1a160c;
+  --display:"Alegreya SC",Georgia,serif;
+  --body:"Alegreya Sans","Segoe UI",system-ui,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{
+  background:var(--bg); color:var(--fg); font-family:var(--body); font-size:16px; line-height:1.45;
+  padding-left:max(16px,env(safe-area-inset-left,0px)); padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:20px 48px;
+  background-image:radial-gradient(ellipse 120% 60% at 50% -10%, #232838 0%, transparent 60%);
+}
+.wrap{max-width:640px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+header h1{font-family:var(--display);font-weight:700;font-size:1.75rem;letter-spacing:.03em;margin:0;color:var(--gold);text-wrap:balance}
+header p{margin:4px 0 0;color:var(--muted);font-size:.95rem}
+.tabs{display:flex;flex-wrap:wrap;gap:4px;border-bottom:1px solid var(--line)}
+.tab{background:none;border:0;color:var(--muted);font:700 1.02rem var(--display);letter-spacing:.04em;padding:10px 12px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}
+.tab[aria-selected="true"]{color:var(--gold);border-bottom-color:var(--gold)}
+.tab:focus-visible,button:focus-visible,select:focus-visible,textarea:focus-visible,input:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+section.view{display:flex;flex-direction:column;gap:16px}
+.box{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.box h2{margin:0;font:700 1.08rem var(--display);letter-spacing:.03em;display:flex;align-items:center;gap:8px}
+.box h3{margin:6px 0 0;font:700 .95rem var(--display);letter-spacing:.03em;color:var(--gold)}
+.box .sub{margin:0;color:var(--muted);font-size:.88rem}
+.lang{display:inline-block;font:600 .72rem var(--body);letter-spacing:.08em;color:var(--ink);background:var(--gold);border-radius:3px;padding:1px 6px}
+.tag{display:inline-block;width:10px;height:10px;border-radius:2px;flex:none}
+.t-mage{background:var(--mage)}.t-melee{background:var(--melee)}.t-archer{background:var(--archer)}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+@media (max-width:480px){.grid3{grid-template-columns:1fr}}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:.85rem;color:var(--muted);min-width:0}
+select,textarea,input.text{width:100%;background:var(--panel2);color:var(--fg);border:1px solid var(--line);border-radius:4px;padding:9px 8px;font:inherit;font-size:.95rem}
+textarea{min-height:90px;font-family:ui-monospace,Menlo,monospace;font-size:.8rem}
+.checks{display:flex;flex-direction:column;gap:10px}
+.check{display:flex;gap:10px;align-items:flex-start;font-size:.95rem;cursor:pointer}
+.check input{width:18px;height:18px;margin-top:2px;accent-color:var(--gold);flex:none}
+.check small{color:var(--muted)}
+.btns{display:flex;flex-wrap:wrap;gap:8px}
+button.primary,button.ghost{font:600 .95rem var(--body);border-radius:4px;padding:10px 16px;cursor:pointer}
+button.primary{background:var(--gold);color:var(--ink);border:1px solid var(--gold)}
+button.primary:hover{background:#d7b46c}
+button.ghost{background:transparent;color:var(--gold);border:1px solid var(--gold-dim)}
+button.link{background:none;border:0;padding:0;color:var(--gold);font:inherit;text-decoration:underline;cursor:pointer}
+.msg{font-size:.92rem;margin:0}
+.msg.err{color:var(--bad)}.msg.ok{color:var(--archer)}
+.slots{font-size:.85rem;color:var(--muted);margin:0}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:.85rem;padding:3px 9px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+.chip.done{border-color:var(--gold-dim);color:var(--fg)}
+.chip.done::before{content:"✓ ";color:var(--gold)}
+.winner{border-color:var(--gold-dim);background:linear-gradient(180deg,#252231,var(--panel))}
+.winner .big{font:700 1.45rem var(--display);color:var(--gold);margin:0}
+.score{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.score .tot{font:700 1.5rem var(--body);font-variant-numeric:tabular-nums}
+.breakdown{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.85rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.breakdown b{color:var(--fg);font-weight:600}
+.breakdown .neg b{color:var(--bad)}
+.lineup{width:100%;border-collapse:collapse;font-size:.9rem}
+.lineup td{padding:6px 4px;border-top:1px solid var(--line);vertical-align:top}
+.lineup td:first-child{color:var(--muted);width:30%;white-space:nowrap}
+.lineup .pts{text-align:right;font-variant-numeric:tabular-nums;color:var(--muted);white-space:nowrap}
+.rec{color:var(--warn);font-weight:600}
+.rec.sup::after{content:" · support";font-weight:400;font-size:.8rem;color:var(--bad)}
+.vol{font-size:.8rem;color:var(--gold)}
+.note{font-size:.85rem;color:var(--warn);margin:0}
+.rules{font-size:.92rem;color:var(--muted);margin:0;padding-left:18px;display:flex;flex-direction:column;gap:5px}
+.rules b{color:var(--fg);font-weight:600}
+.empty{color:var(--muted);text-align:center;padding:22px 8px;margin:0}
+.card-mage{border-top:3px solid var(--mage)}.card-melee{border-top:3px solid var(--melee)}.card-archer{border-top:3px solid var(--archer)}
+.votes-table-wrap{overflow-x:auto}
+.votes{border-collapse:collapse;font-size:.82rem;min-width:540px;width:100%}
+.votes th,.votes td{padding:5px 6px;border-top:1px solid var(--line);text-align:left;vertical-align:top}
+.votes th{color:var(--muted);font-weight:500}
+@media (prefers-reduced-motion:no-preference){.box{transition:border-color .2s}}
+.key-row{display:flex;gap:8px;align-items:flex-end}
+.key-row label{flex:1}
+.updated{font-size:.8rem;color:var(--muted);margin:0}
+.stack{display:flex;flex-direction:column;gap:16px}
