@@ -164,7 +164,8 @@ function solve(comp,votes){
       const nx=f(i+1,mask); res={val:nx.val-UNPLACED,ch:[null,...nx.ch]};
       for(const o of opts[i]){
         if(mask&(1<<o.j)) continue;
-        const r=f(i+1,mask|(1<<o.j)); const val=r.val+o.pts+0.001*tp(votes[i]);
+        /* tie-break only (max 0.081, never beats a real 0.5 point): better picks go to whoever ranked this party type higher */
+        const r=f(i+1,mask|(1<<o.j)); const val=r.val+o.pts+0.001*tp(votes[i])*(o.vol?0.5:3-o.rank);
         if(val>res.val+1e-9) res={val,ch:[o,...r.ch]};
       }
     }
@@ -173,7 +174,18 @@ function solve(comp,votes){
   const best=f(0,0);
   const lineup=slots.map(s=>({slot:s,who:null}));
   let classPts=0,unplaced=[];
-  best.ch.forEach((o,i)=>{if(o){lineup[o.j].who={name:votes[i].name,vote:votes[i],...o};classPts+=o.pts}else unplaced.push(votes[i].name)});
+  best.ch.forEach((o,i)=>{if(o){lineup[o.j].who={name:votes[i].name,vote:votes[i],i,...o};classPts+=o.pts}else unplaced.push(votes[i].name)});
+  /* full ties: two members could swap slots with the same points and the same party type rank -> settle with /dice */
+  const bestOpt=(i,j)=>opts[i].filter(o=>o.j===j&&!o.vol).sort((a,b)=>b.pts-a.pts)[0];
+  for(let j1=0;j1<lineup.length;j1++) for(let j2=j1+1;j2<lineup.length;j2++){
+    const A=lineup[j1].who,B=lineup[j2].who;
+    if(!A||!B||A.vol||B.vol||lineup[j1].slot.l===lineup[j2].slot.l) continue;
+    if(tp(A.vote)!==tp(B.vote)) continue;
+    const oa=bestOpt(A.i,j2),ob=bestOpt(B.i,j1);
+    if(oa&&ob&&Math.abs(oa.pts+ob.pts-A.pts-B.pts)<1e-9){
+      (A.dice=A.dice||[]).push(B.name);(B.dice=B.dice||[]).push(A.name);
+    }
+  }
   lineup.forEach(x=>{
     if(!x.who||!x.who.vol) return;
     const vc=volClasses(x.who.vote);
@@ -222,7 +234,8 @@ function render(){
         ?`<span class="vol">volunteer ${esc(w.groupName)} · chooses from: ${esc(w.choices.join(", "))}</span>`
         :`${esc(label(w.cls))} · <span class="vol">${ORD[w.rank]} pick</span>`;
       const slotLabel=w.vol?"Support":x.slot.l;
-      return `<tr><td>${esc(slotLabel)}</td><td><b>${esc(w.name)}</b><br>${what}</td><td class="pts">+${fmt(w.pts)}</td></tr>`}).join("")}</tbody></table>
+      const dice=w.dice?`<br><span class="dice">tie with ${esc(w.dice.join(", "))} · roll /dice for this slot</span>`:"";
+      return `<tr><td>${esc(slotLabel)}</td><td><b>${esc(w.name)}</b><br>${what}${dice}</td><td class="pts">+${fmt(w.pts)}</td></tr>`}).join("")}</tbody></table>
     ${r.unplaced.length?`<p class="note">No slot from their picks: ${esc(r.unplaced.join(", "))}</p>`:""}
     ${r.lineup.some(x=>x.who&&x.who.vol)?`<p class="sub">The empty support slots change depending on the class the volunteer chooses.</p>`:""}
   </div>`).join("");
