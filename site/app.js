@@ -16,7 +16,7 @@ const ARCHERS = ["Hawkeye","Silver Ranger","Phantom Ranger"];
 const TANKS = ["Paladin","Dark Avenger","Temple Knight","Shillien Knight"];
 const DDS = ["Gladiator","Warlord","Treasure Hunter","Plains Walker","Abyss Walker","Destroyer","Tyrant","Warlock","Elemental Summoner","Phantom Summoner","Bounty Hunter","Warsmith"];
 const S = (l,a,extra={}) => Object.assign({l,a,s:a.every(c=>SUPPORTS.includes(c))},extra);
-const WCPP = S("WC / PP",["Warcryer","Prophet"],{b:{"Warcryer":0.5}});
+const WCPP = S("WC / PP",["Warcryer","Prophet"]);   // WC and PP count the same
 const COMPS = {
   mage:[S("Necro",["Necromancer"]),S("Nuker",MAGE_NUKERS),S("Nuker",MAGE_NUKERS),S("BD",["Bladedancer"]),S("SWS",["Swordsinger"]),S("OL",["Overlord"]),S("BP",["Bishop"]),S("EE",["Elven Elder"]),S("SE",["Shillien Elder"])],
   archer:[S("Archer",ARCHERS),S("Archer",ARCHERS),S("Archer",ARCHERS),S("BD",["Bladedancer"]),S("SWS",["Swordsinger"]),S("EE",["Elven Elder"]),S("BP",["Bishop"]),WCPP,S("Archer / Warlock / Tank",[...ARCHERS,"Warlock",...TANKS],{note:{cls:TANKS,text:"tank must sub Warlock"}})],
@@ -182,7 +182,7 @@ function solve(comp,votes){
       const nx=f(i+1,mask); res={val:nx.val-UNPLACED-PRIO_SLOT,ch:[null,...nx.ch]};
       for(const o of opts[i]){
         if(mask&(1<<o.j)) continue;
-        /* PRIO_TOP protects top picks; the 0.001 part is only a tie-break (max 0.081, never beats a real 0.5 point):
+        /* PRIO_TOP protects top picks; the 0.001 part is only a tie-break (max 0.081, never beats a real point):
            better picks go to whoever ranked this party type higher */
         const r=f(i+1,mask|(1<<o.j)); const val=r.val+o.pts+(o.top?PRIO_TOP:0)+0.001*tp(votes[i])*(o.vol?0.5:3-o.eff);
         if(val>res.val+1e-9) res={val,ch:[o,...r.ch]};
