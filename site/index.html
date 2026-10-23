@@ -13,6 +13,7 @@
 <style>html{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}</style>
 <script src="config.js"></script>
 <script src="app.js" defer></script>
+<script src="schedule.js" defer></script>
 </head>
 <body>
 <div class="wrap">
@@ -24,6 +25,7 @@
   <nav class="tabs" role="tablist">
     <button class="tab" role="tab" id="tab-vote" aria-selected="true">Vote</button>
     <button class="tab" role="tab" id="tab-results" aria-selected="false">Results</button>
+    <button class="tab" role="tab" id="tab-schedule" aria-selected="false">Schedule</button>
     <button class="tab" role="tab" id="tab-rules" aria-selected="false">How it works</button>
   </nav>
 
@@ -76,6 +78,43 @@
     <div class="box">
       <h2>All votes</h2>
       <div class="votes-table-wrap" id="votes-table"></div>
+    </div>
+  </section>
+
+  <!-- SCHEDULE -->
+  <section class="view" id="view-schedule" hidden>
+    <div class="box">
+      <h2>My hours</h2>
+      <p class="sub">An L2 day runs <b>06:00 → 06:00</b>, so a night like 22:00–02:00 stays one session. Enter times in <b>your own</b> time zone.</p>
+      <div class="grid3 g2">
+        <label class="f" for="sched-who">Member<select id="sched-who"></select></label>
+        <label class="f" for="sched-key">Party key<input class="text" type="password" id="sched-key" autocomplete="off" placeholder="Ask the party leader"></label>
+      </div>
+      <label class="f" for="sched-tz">My time zone<select id="sched-tz"></select></label>
+      <p class="sub" id="sched-hint"></p>
+      <h3>Usual hours per weekday</h3>
+      <div id="sched-week" class="sd"></div>
+      <h3>Next 7 days</h3>
+      <p class="sub">Change single days when they differ from your usual hours.</p>
+      <div id="sched-days" class="sd"></div>
+      <div class="btns"><button class="primary" id="sched-save">Save my hours</button></div>
+      <p class="msg" id="sched-msg" aria-live="polite"></p>
+    </div>
+
+    <div class="box">
+      <h2>Who can play when</h2>
+      <p class="sub">Times shown in your time zone: <b id="sched-tzview"></b>. Blue = can play. The bottom row counts people online, gold = enough for a party.</p>
+      <label class="f inline" for="sched-min">Show windows with at least <input class="text num" type="number" id="sched-min" min="1" max="20"> people</label>
+      <p class="sub" id="sched-missing"></p>
+      <p class="updated" id="sched-updated"></p>
+    </div>
+
+    <div id="sched-out" class="stack"></div>
+
+    <div class="box">
+      <h2>Pair overlap</h2>
+      <p class="sub">Hours each two members can play together in the next 7 days.</p>
+      <div class="votes-table-wrap" id="sched-pairs"></div>
     </div>
   </section>
 
@@ -144,6 +183,18 @@
         <li>If there is no slot from your picks at all, you go to support, and the party type avoids the −5.</li>
         <li>If you get a slot from a tick box, <b>you choose the class</b> from the open slots of that group. Whatever is left, we recruit. If two volunteers are in the same group, you agree between you.</li>
       </ul>
+
+      <h3>Schedule</h3>
+      <ul class="rules">
+        <li>An L2 day runs <b>06:00 → 06:00</b>, so a night like 22:00–02:00 stays one session.</li>
+        <li>Each member enters times in <b>his own time zone</b> (for example kOsA in Prague, the rest in Athens). Everybody sees all hours converted to his own time zone.</li>
+        <li><b>Usual hours per weekday</b> repeat every week. Under <b>Next 7 days</b> you change only the days that differ, or mark <b>Can't play</b>.</li>
+        <li>For each day you see one row per member and an <b>online</b> row: gold means at least the number of people you chose in the filter.</li>
+        <li><b>Windows</b> are stretches of 1 hour or more with enough people online. <b>Whole time</b> lists who is there from start to end, <b>Part of it</b> who joins or leaves.</li>
+        <li>For each window, the page builds the <b>Mage party</b> from the whole-time group, with the same rules as the vote, and shows which slots we must recruit. Members without a vote are not in that lineup.</li>
+        <li><b>Pair overlap</b> shows how many hours each two members can play together in the next 7 days.</li>
+        <li>Days older than 2 days are deleted by themselves.</li>
+      </ul>
     </div>
 
     <div class="box" lang="el">
@@ -208,6 +259,18 @@
         <li>Αν ελεύθερη είναι μόνο η <b>2η ή 3η</b> σου επιλογή, μπαίνεις σε support. Η 2η ή 3η επιλογή σου θα έδινε +2 ή +1, ενώ αν γεμίσεις μια κενή θέση support φεύγει το −3 της, που είναι σαν +3. Άρα το σύνολο του τύπου party βγαίνει μεγαλύτερο με εσένα σε support. Αυτό ισχύει το ίδιο σε κάθε τύπο party.</li>
         <li>Αν δεν υπάρχει θέση από τις επιλογές σου, μπαίνεις σε support και ο τύπος party γλιτώνει το −5.</li>
         <li>Αν μπεις σε θέση από κουτάκι, <b>διαλέγεις εσύ το class</b> από τις θέσεις της ομάδας που είναι ακόμα ανοιχτές. Όσα μείνουν, τα ψάχνουμε. Αν είναι δύο εθελοντές στην ίδια ομάδα, τα βρίσκετε μεταξύ σας.</li>
+      </ul>
+
+      <h3>Πρόγραμμα</h3>
+      <ul class="rules">
+        <li>Μια μέρα L2 είναι από <b>06:00 → 06:00</b>, οπότε ένα βράδυ όπως 22:00–02:00 μένει ένα session.</li>
+        <li>Κάθε μέλος βάζει ώρες στη <b>δική του ώρα</b> (π.χ. ο kOsA σε ώρα Πράγας, οι υπόλοιποι σε ώρα Αθήνας). Ο καθένας βλέπει όλες τις ώρες μετατρεμμένες στη δική του ώρα.</li>
+        <li>Οι <b>συνηθισμένες ώρες ανά μέρα</b> επαναλαμβάνονται κάθε εβδομάδα. Στις <b>επόμενες 7 μέρες</b> αλλάζεις μόνο τις μέρες που διαφέρουν, ή βάζεις <b>Can't play</b>.</li>
+        <li>Για κάθε μέρα βλέπεις μία γραμμή ανά μέλος και μια γραμμή <b>online</b>: χρυσό σημαίνει τουλάχιστον όσα άτομα έχεις βάλει στο φίλτρο.</li>
+        <li>Τα <b>windows</b> είναι διαστήματα 1 ώρας και πάνω με αρκετά άτομα online. Το <b>Whole time</b> δείχνει ποιοι είναι εκεί από την αρχή ως το τέλος, το <b>Part of it</b> ποιοι μπαίνουν ή φεύγουν ενδιάμεσα.</li>
+        <li>Για κάθε window η σελίδα στήνει το <b>Mage party</b> με όσους είναι εκεί όλη την ώρα, με τους ίδιους κανόνες όπως στην ψήφο, και δείχνει ποιες θέσεις πρέπει να ψάξουμε. Όσοι δεν έχουν ψηφίσει δεν μπαίνουν σε αυτό το lineup.</li>
+        <li>Το <b>Pair overlap</b> δείχνει πόσες ώρες μπορούν να παίξουν μαζί κάθε δύο μέλη τις επόμενες 7 μέρες.</li>
+        <li>Μέρες παλαιότερες από 2 μέρες σβήνονται μόνες τους.</li>
       </ul>
     </div>
   </section>

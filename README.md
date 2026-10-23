@@ -91,6 +91,9 @@ curl -X DELETE -H "X-Admin-Key: $ADMIN_KEY" $W/api/votes             # reset for
 | PUT    | `/api/votes/<name>` | `X-Party-Key` | Save or replace that member's vote |
 | DELETE | `/api/votes/<name>` | `X-Admin-Key` | Delete one vote |
 | DELETE | `/api/votes`        | `X-Admin-Key` | Delete all votes |
+| GET    | `/api/schedule`        | none          | `{members, schedule}` |
+| PUT    | `/api/schedule/<name>` | `X-Party-Key` | Save that member's hours `{tz, template, overrides}` |
+| DELETE | `/api/schedule/<name>` | `X-Admin-Key` | Delete one member's hours (`/api/schedule` = all) |
 | GET    | `/healthz`          | none          | `ok` |
 
 ## Security notes

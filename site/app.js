@@ -275,11 +275,12 @@ function render(){
 }
 
 /* ---------- tabs ---------- */
-const VIEWS=["vote","results","rules"];
+const VIEWS=["vote","results","schedule","rules"];
 function show(which){
   if(!VIEWS.includes(which)) which="vote";
   VIEWS.forEach(v=>{$("tab-"+v).setAttribute("aria-selected",v===which);$("view-"+v).hidden=v!==which});
   if(which==="results") loadVotes();
+  if(which==="schedule"&&window.schedShow) window.schedShow();
   store.set("cpTab",which);
 }
 

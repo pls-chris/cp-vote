@@ -52,6 +52,26 @@ export class VoteStore extends DurableObject {
       await this.ctx.storage.put("votes", votes);
     }
   }
+  /* ---- schedule ---- */
+  async schedList() {
+    const all = (await this.ctx.storage.get("sched")) || {};
+    const cutoff = isoDay(Date.now() - 2 * DAY_MS);
+    for (const k of Object.keys(all)) {
+      const o = all[k].overrides || {};
+      for (const d of Object.keys(o)) if (d < cutoff) delete o[d];
+    }
+    return all;
+  }
+  async schedPut(id, entry) {
+    const all = await this.schedList();
+    all[id] = entry;
+    await this.ctx.storage.put("sched", all);
+  }
+  async schedRemove(id) {
+    const all = await this.schedList();
+    if (id === null) await this.ctx.storage.put("sched", {});
+    else { delete all[id]; await this.ctx.storage.put("sched", all); }
+  }
   rateOk(ip) {
     const now = Date.now();
     const q = (this.hits.get(ip) || []).filter(t => now - t < WRITE_WINDOW);
@@ -64,6 +84,41 @@ export class VoteStore extends DurableObject {
 }
 
 /* ---------------- helpers ---------------- */
+const DAY_MS = 86_400_000;
+const isoDay = ms => new Date(ms).toISOString().slice(0, 10);
+
+/* schedule: an "L2 day" runs 06:00 -> 06:00 in the member's own time zone.
+   A range [start, end] is minutes after that day's 06:00, in 30-minute steps: 0 = 06:00, 1080 = 00:00, 1440 = 06:00 next morning. */
+function cleanRanges(r, what) {
+  if (!Array.isArray(r) || r.length > 4) throw new Error(`${what}: at most 4 time ranges per day.`);
+  return r.map(x => {
+    if (!Array.isArray(x) || x.length !== 2) throw new Error(`${what}: bad time range.`);
+    const [a, b] = x;
+    for (const v of [a, b]) if (!Number.isInteger(v) || v < 0 || v > 1440 || v % 30) throw new Error(`${what}: times must be in 30-minute steps.`);
+    if (b <= a) throw new Error(`${what}: the end must be after the start (the day ends at 06:00).`);
+    return [a, b];
+  });
+}
+function cleanSchedule(body, member) {
+  if (!body || typeof body !== "object" || Array.isArray(body)) throw new Error("Schedule must be a JSON object.");
+  const tz = body.tz;
+  if (typeof tz !== "string" || tz.length > 64) throw new Error("Time zone is missing.");
+  try { new Intl.DateTimeFormat("en", { timeZone: tz }); } catch { throw new Error("Unknown time zone."); }
+  const t = body.template && typeof body.template === "object" ? body.template : {};
+  const template = {};
+  for (let d = 0; d < 7; d++) template[d] = cleanRanges(t[d] || [], "Weekly hours");
+  const o = body.overrides && typeof body.overrides === "object" ? body.overrides : {};
+  const keys = Object.keys(o);
+  if (keys.length > 40) throw new Error("Too many changed days.");
+  const lo = isoDay(Date.now() - 2 * DAY_MS), hi = isoDay(Date.now() + 45 * DAY_MS);
+  const overrides = {};
+  for (const d of keys) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) throw new Error("Bad date.");
+    if (d < lo || d > hi) continue;              // silently drop old or far-away days
+    overrides[d] = cleanRanges(o[d], d);
+  }
+  return { name: member, tz, template, overrides, ts: Date.now() };
+}
 const members = env => (env.MEMBERS || "").split(",").map(s => s.trim()).filter(Boolean);
 
 async function keyOk(given, expected) {
@@ -149,12 +204,37 @@ export default {
 
     if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: corsHeaders(env, req) });
     if (path === "/healthz") return new Response("ok", { headers: { "Content-Type": "text/plain", ...corsHeaders(env, req) } });
-    if (!path.startsWith("/api/votes")) return err(404, "Not found.");
+    const base = path.startsWith("/api/schedule") ? "/api/schedule" : path.startsWith("/api/votes") ? "/api/votes" : null;
+    if (!base) return err(404, "Not found.");
 
     let tail = null;
-    if (path !== "/api/votes") {
-      if (!path.startsWith("/api/votes/")) return err(404, "Not found.");
-      try { tail = decodeURIComponent(path.slice("/api/votes/".length)); } catch { return err(400, "Bad member name."); }
+    if (path !== base) {
+      if (!path.startsWith(base + "/")) return err(404, "Not found.");
+      try { tail = decodeURIComponent(path.slice(base.length + 1)); } catch { return err(400, "Bad member name."); }
+    }
+
+    if (base === "/api/schedule") {
+      if (req.method === "GET" && tail === null) {
+        return json(env, req, 200, { members: members(env), schedule: await store.schedList() });
+      }
+      if (req.method === "PUT" && tail !== null) {
+        if (!env.PARTY_KEY) return err(503, "The server has no party key set.");
+        const ip = req.headers.get("CF-Connecting-IP") || "unknown";
+        if (!(await store.rateOk(ip))) return err(429, "Too many saves from you. Wait a minute and try again.");
+        if (!(await keyOk(req.headers.get("X-Party-Key"), env.PARTY_KEY))) return err(401, "Wrong party key.");
+        const member = members(env).find(m => m.toLowerCase() === tail.toLowerCase());
+        if (!member) return err(400, "Unknown member name.");
+        let entry;
+        try { entry = cleanSchedule(await readJson(req), member); } catch (e) { return err(400, e.message || "Bad schedule."); }
+        await store.schedPut(member.toLowerCase(), entry);
+        return json(env, req, 200, { ok: true, entry });
+      }
+      if (req.method === "DELETE") {
+        if (!(await keyOk(req.headers.get("X-Admin-Key"), env.ADMIN_KEY))) return err(401, "Wrong admin key.");
+        await store.schedRemove(tail === null ? null : tail.toLowerCase());
+        return json(env, req, 200, { ok: true });
+      }
+      return err(405, "Method not allowed.");
     }
 
     if (req.method === "GET" && tail === null) {
