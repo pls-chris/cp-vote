@@ -6,7 +6,7 @@ compatibility_date = "2025-09-01"
 workers_dev = true
 
 [vars]
-MEMBERS = "kOsA,Ankalime,turambar,morrax,sinook,gx,morgx"
+MEMBERS = "kOsA,Ankalime,turambar,morrax,sinook,gx,morgx,eulogitos"
 # Overwritten by the GitHub workflow from the PAGES_ORIGIN repo variable.
 # Comma-separate more than one origin if needed.
 ALLOWED_ORIGIN = "http://localhost:8000"

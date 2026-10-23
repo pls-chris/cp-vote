@@ -1,7 +1,7 @@
 /* CP Lineup Vote - Christoforos Pliatsikas */
 "use strict";
 
-let MEMBERS = ["kOsA","Ankalime","turambar","morrax","sinook","gx","morgx"]; // replaced by the server list
+let MEMBERS = ["kOsA","Ankalime","turambar","morrax","sinook","gx","morgx","eulogitos"]; // replaced by the server list
 const TYPES = [{id:"mage",name:"Mage"},{id:"melee",name:"Melee"},{id:"archer",name:"Archer"}];
 const ABBR = {"Bladedancer":"BD","Swordsinger":"SWS","Overlord":"OL","Bishop":"BP","Elven Elder":"EE","Shillien Elder":"SE","Warcryer":"WC","Prophet":"PP"};
 const SUPPORTS = Object.keys(ABBR);
