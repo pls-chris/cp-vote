@@ -125,3 +125,4 @@ input.num{width:4.2rem;padding:5px 6px}
 .pairs td.pv{background:rgba(130,168,227,calc(var(--a)*.55));text-align:center;font-variant-numeric:tabular-nums}
 .pairs td.self{text-align:center;color:var(--muted)}
 .pairs th{white-space:nowrap}
+.check.sm{font-size:.85rem;gap:6px;align-items:center}.check.sm input{width:16px;height:16px;margin:0}

@@ -41,7 +41,8 @@ function addDays(y,m,d,n){const t=new Date(Date.UTC(y,m-1,d+n));return {y:t.getU
 /* the L2 day (date) that "now" belongs to, in tz */
 function l2Today(tz){const p=tzParts(Date.now(),tz);const back=(p.h*60+p.mi)<SCH.DAY_START?-1:0;return addDays(p.y,p.m,p.d,back)}
 const clock=g=>{const t=(SCH.DAY_START+g)%1440;return String(Math.floor(t/60)).padStart(2,"0")+":"+String(t%60).padStart(2,"0")};
-const rangeTxt=r=>r.length?r.map(([a,b])=>clock(a)+"–"+clock(b)).join(", "):"no play";
+const isAllDay=r=>r.length===1&&r[0][0]===0&&r[0][1]===1440;
+const rangeTxt=r=>isAllDay(r)?"all day":r.length?r.map(([a,b])=>clock(a)+"–"+clock(b)).join(", "):"no play";
 const dayLabel=(dt,tz)=>new Intl.DateTimeFormat("en-GB",{timeZone:"UTC",weekday:"short",day:"numeric",month:"short"}).format(new Date(Date.UTC(dt.y,dt.m-1,dt.d,12)));
 const fmtTime=(ts,tz)=>new Intl.DateTimeFormat("en-GB",{timeZone:tz,hour:"2-digit",minute:"2-digit",hourCycle:"h23"}).format(new Date(ts));
 
@@ -127,8 +128,15 @@ function rangeRow(list, idx, onChange){
   const dash=document.createElement("span");dash.textContent="–";
   row.append(s1,dash,s2,x);return row;
 }
+let _adId=0;
 function rangesEditor(list, onChange){
   const wrap=document.createElement("div");wrap.className="rgs";
+  /* "All day" tick: the whole L2 day, 06:00 -> 06:00 */
+  const id="allday-"+(++_adId), lab=document.createElement("label");lab.className="check sm";lab.htmlFor=id;
+  const cb=document.createElement("input");cb.type="checkbox";cb.id=id;cb.checked=isAllDay(list);
+  cb.onchange=()=>{list.splice(0,list.length,...(cb.checked?[[0,1440]]:[]));onChange()};
+  const t=document.createElement("span");t.textContent="All day";lab.append(cb,t);wrap.append(lab);
+  if(isAllDay(list)) return wrap;
   list.forEach((_,i)=>wrap.append(rangeRow(list,i,onChange)));
   if(!list.length){const n=document.createElement("span");n.className="sub";n.textContent="no play";wrap.append(n)}
   if(list.length<4){const add=document.createElement("button");add.className="ghost sm";add.type="button";add.textContent="+ add";
@@ -159,6 +167,7 @@ function renderEditor(){
     const acts=document.createElement("div");acts.className="sd-acts";
     const mk=(txt,fn)=>{const b=document.createElement("button");b.type="button";b.className="ghost sm";b.textContent=txt;b.onclick=fn;acts.append(b)};
     if(!changed) mk("Change this day",()=>{ed.overrides[iso]=JSON.parse(JSON.stringify(ed.template[dt.wd]||[]));renderEditor()});
+    if(!isAllDay(changed?ed.overrides[iso]:(ed.template[dt.wd]||[]))) mk("All day",()=>{ed.overrides[iso]=[[0,1440]];renderEditor()});
     if(!(changed&&ed.overrides[iso].length===0)) mk("Can't play",()=>{ed.overrides[iso]=[];renderEditor()});
     if(changed) mk("Use weekly",()=>{delete ed.overrides[iso];renderEditor()});
     body.append(acts);row.append(body);ow.append(row);
