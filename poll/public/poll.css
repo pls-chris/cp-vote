@@ -75,3 +75,11 @@ input.text{width:100%;background:var(--panel2);color:var(--fg);border:1px solid 
 .vt td.s{color:var(--muted)}
 @media (max-width:420px){.bar{grid-template-columns:6.2rem minmax(0,1fr) 4rem}.cell{min-height:46px}.cell .t{font-size:.85rem}}
 @media (prefers-reduced-motion:no-preference){.bar .fill{transition:width .4s ease}}
+
+/* crest + watermark */
+.hero{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px}
+.crest{width:112px;height:112px;border-radius:50%;object-fit:cover;border:2px solid #6e1a12;
+  box-shadow:0 0 0 4px rgba(226,40,24,.12),0 0 28px rgba(226,40,24,.45)}
+@media (min-width:640px){.crest{width:136px;height:136px}}
+.wm{margin-top:8px;text-align:center;font:italic 400 .78rem var(--body);letter-spacing:.06em;color:var(--muted);opacity:.45;user-select:none}
+html{background:var(--bg)}body{min-height:100vh;background-attachment:fixed}

@@ -8,12 +8,14 @@
 <title>Clan Meeting Poll</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya+SC:wght@700&family=Alegreya+Sans:wght@400;500;700&display=swap">
+<link rel="icon" href="/favicon.png">
 <link rel="stylesheet" href="/poll.css">
 <script src="/poll.client.js" defer></script>
 </head>
 <body>
 <main class="wrap">
-  <header>
+  <header class="hero">
+    <img class="crest" src="/crest.jpg" alt="4oD crest" width="112" height="112">
     <h1>Clan Meeting Poll</h1>
     <p>Tick every time that works for you. One vote per Discord account, and you can change it any time. Times are shown in <b>your</b> time zone: <b id="tz"></b>.</p>
   </header>
@@ -56,6 +58,8 @@
     <p class="msg" id="admin-msg" aria-live="polite"></p>
     <div id="admin-out"></div>
   </details>
+
+  <footer class="wm">created by Ankalime</footer>
 </main>
 </body>
 </html>

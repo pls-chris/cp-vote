@@ -15,6 +15,8 @@ import { DurableObject } from "cloudflare:workers";
 import PAGE from "../public/index.html";
 import CSS from "../public/poll.css";
 import JS from "../public/poll.client.js";
+import CREST from "../public/crest.jpg";
+import ICON from "../public/crest-64.png";
 
 /* Slots are fixed in Greek time: day 0 = Sunday ... 4 = Thursday, hours 19-22 (one hour each). */
 const DAYS = 5, HOURS = [19, 20, 21, 22];
@@ -92,7 +94,7 @@ const redirect = (to, cookies = []) => {
   for (const c of cookies) h.append("Set-Cookie", c);
   return new Response(null, { status: 302, headers: h });
 };
-const page = (title, text) => resp(`<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="author" content="Christoforos Pliatsikas"><title>${title}</title><link rel="stylesheet" href="/poll.css"><main class="wrap"><div class="box"><h2>${title}</h2><p>${text}</p><p><a class="btn" href="/">Back to the poll</a></p></div></main>`, 200, "text/html; charset=utf-8");
+const page = (title, text) => resp(`<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="author" content="Christoforos Pliatsikas"><title>${title}</title><link rel="icon" href="/favicon.png"><link rel="stylesheet" href="/poll.css"><main class="wrap"><header class="hero"><img class="crest" src="/crest.jpg" alt="4oD crest" width="112" height="112"></header><div class="box"><h2>${title}</h2><p>${text}</p><p><a class="btn" href="/">Back to the poll</a></p></div><footer class="wm">created by Ankalime</footer></main>`, 200, "text/html; charset=utf-8");
 
 /* ---------------- Discord OAuth ---------------- */
 const discordApi = env => (env.DISCORD_API || "https://discord.com/api").replace(/\/$/, "");
@@ -157,6 +159,8 @@ export default {
     if (req.method === "GET" && (path === "/" || path === "/index.html")) return resp(PAGE, 200, "text/html; charset=utf-8");
     if (req.method === "GET" && path === "/poll.css") return resp(CSS, 200, "text/css; charset=utf-8");
     if (req.method === "GET" && path === "/poll.client.js") return resp(JS, 200, "text/javascript; charset=utf-8");
+    if (req.method === "GET" && path === "/crest.jpg") return new Response(CREST, { headers: { "Content-Type": "image/jpeg", "Cache-Control": "public, max-age=86400", ...SEC_HEADERS } });
+    if (req.method === "GET" && (path === "/favicon.png" || path === "/favicon.ico")) return new Response(ICON, { headers: { "Content-Type": "image/png", "Cache-Control": "public, max-age=86400", ...SEC_HEADERS } });
     if (path === "/healthz") return resp("ok", 200, "text/plain");
 
     if (req.method === "GET" && path === "/auth/login") return login(req, env, url);
