@@ -1,7 +1,7 @@
 /* CP Lineup Vote - Christoforos Pliatsikas */
 "use strict";
 
-let MEMBERS = ["kOsA","Ankalime","turambar","morrax","sinook","gx","morgx","eulogitos"]; // replaced by the server list
+let MEMBERS = []; // filled from the server after the party key is accepted (no names in public files)
 const TYPES = [{id:"mage",name:"Mage"},{id:"melee",name:"Melee"},{id:"archer",name:"Archer"}];
 const ABBR = {"Bladedancer":"BD","Swordsinger":"SWS","Overlord":"OL","Bishop":"BP","Elven Elder":"EE","Shillien Elder":"SE","Warcryer":"WC","Prophet":"PP"};
 const SUPPORTS = Object.keys(ABBR);
@@ -58,8 +58,10 @@ const store = {
 async function loadVotes(){
   if(!API){$("updated").textContent="The vote server is not set up yet (config.js has no Worker URL).";return}
   try{
-    const r=await fetch(API+"/api/votes",{cache:"no-store"});
+    const r=await fetch(API+"/api/votes",{cache:"no-store",headers:{"X-Party-Key":store.get("cpKey")||""}});
+    if(r.status===401){setLocked(true,!!store.get("cpKey"));return}
     if(!r.ok) throw new Error(r.status);
+    setLocked(false);
     const d=await r.json();
     if(Array.isArray(d.members)&&d.members.length&&d.members.join()!==MEMBERS.join()){MEMBERS=d.members;fillVoters()}
     votesById=d.votes||{};lastLoad=new Date();
@@ -68,6 +70,25 @@ async function loadVotes(){
     return;
   }
   render();
+}
+
+/* ---------- party key gate ---------- */
+function setLocked(locked,wrong){
+  $("unlock").hidden=!locked;
+  if(locked){
+    $("unlock-msg").className="msg"+(wrong?" err":"");
+    $("unlock-msg").textContent=wrong?"That party key is not right. Ask the party leader.":"";
+    votesById={};render();
+    $("results-out").innerHTML=`<div class="box"><p class="empty">Locked. Type the party key at the top of the page.</p></div>`;
+    $("votes-table").innerHTML="";
+  }
+}
+async function unlock(){
+  const k=$("unlock-key").value.trim();if(!k) return;
+  store.set("cpKey",k);if($("party-key")) $("party-key").value=k;if($("sched-key")) $("sched-key").value=k;
+  await loadVotes();
+  if(!$("unlock").hidden) return;
+  if(window.schedShow&&!$("view-schedule").hidden) window.schedShow();
 }
 
 /* ---------- vote form ---------- */
@@ -288,6 +309,8 @@ document.addEventListener("DOMContentLoaded",()=>{
   VIEWS.forEach(v=>$("tab-"+v).addEventListener("click",()=>show(v)));
   $("goto-rules").addEventListener("click",()=>{show("rules");window.scrollTo(0,0)});
   $("submit").addEventListener("click",submit);
+  $("unlock-btn").addEventListener("click",unlock);
+  $("unlock-key").addEventListener("keydown",e=>{if(e.key==="Enter")unlock()});
   buildForm();render();
   const hash=location.hash.slice(1);
   show(VIEWS.includes(hash)?hash:(store.get("cpTab")||"vote"));

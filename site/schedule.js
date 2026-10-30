@@ -65,7 +65,8 @@ function memberIntervals(entry, fromMs, toMs){
 async function loadSched(){
   if(!API) return;
   try{
-    const r=await fetch(API+"/api/schedule",{cache:"no-store"});
+    const r=await fetch(API+"/api/schedule",{cache:"no-store",headers:{"X-Party-Key":store.get("cpKey")||""}});
+    if(r.status===401){SCH.data={};$("sched-updated").textContent="Locked: type the party key at the top of the page.";renderOverlap();return}
     if(!r.ok) throw new Error(r.status);
     const d=await r.json();
     SCH.data=d.schedule||{};SCH.loaded=true;

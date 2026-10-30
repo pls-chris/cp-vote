@@ -1,0 +1,30 @@
+# Clan meeting poll - Cloudflare Worker config
+# Author: Christoforos Pliatsikas
+name = "clan-poll"
+main = "src/index.js"
+compatibility_date = "2025-09-01"
+workers_dev = true
+
+# the page, styles and browser script are bundled into the Worker as text
+[[rules]]
+type = "Text"
+globs = ["**/*.html", "**/*.css", "**/*.client.js"]
+fallthrough = false
+
+[vars]
+# Set by the GitHub workflow from repository variables:
+#   DISCORD_CLIENT_ID <- vars.DISCORD_CLIENT_ID
+#   GUILD_ID          <- vars.DISCORD_GUILD_ID
+DISCORD_CLIENT_ID = ""
+GUILD_ID = ""
+
+[[durable_objects.bindings]]
+name = "STORE"
+class_name = "PollStore"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["PollStore"]
+
+[observability]
+enabled = true

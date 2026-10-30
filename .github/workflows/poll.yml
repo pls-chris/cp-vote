@@ -1,0 +1,58 @@
+# Deploy the clan meeting poll (poll/) to Cloudflare Workers
+# Author: Christoforos Pliatsikas
+name: Deploy poll
+
+on:
+  push:
+    branches: [main]
+    paths: ["poll/**", ".github/workflows/poll.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: poll
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check settings
+        env:
+          HAS_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN != '' }}
+          HAS_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID != '' }}
+          HAS_DSECRET: ${{ secrets.DISCORD_CLIENT_SECRET != '' }}
+          HAS_SESSION: ${{ secrets.SESSION_SECRET != '' }}
+          HAS_ADMIN: ${{ secrets.POLL_ADMIN_KEY != '' }}
+          CLIENT_ID: ${{ vars.DISCORD_CLIENT_ID }}
+          GUILD_ID: ${{ vars.DISCORD_GUILD_ID }}
+        run: |
+          ok=1
+          [ "$HAS_TOKEN" = "true" ]   || { echo "::error::Secret CLOUDFLARE_API_TOKEN is missing"; ok=0; }
+          [ "$HAS_ACCOUNT" = "true" ] || { echo "::error::Secret CLOUDFLARE_ACCOUNT_ID is missing"; ok=0; }
+          [ "$HAS_DSECRET" = "true" ] || { echo "::error::Secret DISCORD_CLIENT_SECRET is missing"; ok=0; }
+          [ "$HAS_SESSION" = "true" ] || { echo "::error::Secret SESSION_SECRET is missing"; ok=0; }
+          [ "$HAS_ADMIN" = "true" ]   || { echo "::error::Secret POLL_ADMIN_KEY is missing"; ok=0; }
+          [[ "$CLIENT_ID" =~ ^[0-9]{15,22}$ ]] || { echo "::error::Variable DISCORD_CLIENT_ID is missing or not a number"; ok=0; }
+          [[ "$GUILD_ID" =~ ^[0-9]{15,22}$ ]]  || { echo "::error::Variable DISCORD_GUILD_ID is missing or not a number"; ok=0; }
+          [ $ok = 1 ]
+
+      - uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: poll
+          wranglerVersion: "4.20.0"
+          command: deploy --var DISCORD_CLIENT_ID:${{ vars.DISCORD_CLIENT_ID }} --var GUILD_ID:${{ vars.DISCORD_GUILD_ID }}
+          secrets: |
+            DISCORD_CLIENT_SECRET
+            SESSION_SECRET
+            POLL_ADMIN_KEY
+        env:
+          DISCORD_CLIENT_SECRET: ${{ secrets.DISCORD_CLIENT_SECRET }}
+          SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
+          POLL_ADMIN_KEY: ${{ secrets.POLL_ADMIN_KEY }}

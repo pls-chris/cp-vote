@@ -123,3 +123,32 @@ npx wrangler@4.20.0 dev --port 8787
 # in another shell, serve site/ on http://localhost:8000 with config.js set to http://127.0.0.1:8787
 # and connect-src in index.html changed to the same URL
 ```
+
+## Clan meeting poll (`poll/`)
+
+A separate Worker (`clan-poll`) with its own URL, data and keys. Nothing in it links to the CP app.
+
+- Slots: Sun–Thu, 19:00 / 20:00 / 21:00 / 22:00 **Greek time**, one hour each. Each viewer sees them in his own time zone.
+- Login with Discord. Only members of the clan Discord server (`DISCORD_GUILD_ID`) can vote. One vote per Discord account; voting again replaces it.
+- Voters see totals only (bar chart + day/hour grid). The admin view (poll admin key) shows names and can delete votes.
+- Session: signed HttpOnly cookie, 7 days. The Discord access token is not stored.
+
+Setup (once):
+
+1. discord.com/developers/applications → New Application → OAuth2:
+   copy **Client ID** and **Client Secret**, add redirect `https://clan-poll.<your-subdomain>.workers.dev/auth/callback`.
+2. Repo secrets: `DISCORD_CLIENT_SECRET`, `SESSION_SECRET` (`openssl rand -hex 32`), `POLL_ADMIN_KEY` (`openssl rand -hex 24`).
+3. Repo variables: `DISCORD_CLIENT_ID`, `DISCORD_GUILD_ID` (right-click the server → Copy Server ID, Developer Mode on).
+4. Actions → **Deploy poll** → Run workflow.
+
+Admin:
+
+```sh
+P=https://clan-poll.<your-subdomain>.workers.dev
+curl -s -H "X-Admin-Key: $POLL_ADMIN_KEY" $P/api/admin/votes | jq
+curl -X DELETE -H "X-Admin-Key: $POLL_ADMIN_KEY" $P/api/admin/votes          # reset
+```
+
+## CP data lock
+
+Reading votes and schedule (`GET /api/votes`, `GET /api/schedule`) needs `X-Party-Key`. The page shows an unlock box until the key is typed; the key is remembered on that device. Member names are not in the public page files.

@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="author" content="Christoforos Pliatsikas">
+<meta name="robots" content="noindex,nofollow">
+<title>Clan Meeting Poll</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya+SC:wght@700&family=Alegreya+Sans:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="/poll.css">
+<script src="/poll.client.js" defer></script>
+</head>
+<body>
+<main class="wrap">
+  <header>
+    <h1>Clan Meeting Poll</h1>
+    <p>Tick every time that works for you. One vote per Discord account, and you can change it any time. Times are shown in <b>your</b> time zone: <b id="tz"></b>.</p>
+  </header>
+
+  <section class="box" id="login-box" hidden>
+    <h2>Log in to vote</h2>
+    <p class="sub">Only members of the clan Discord server can vote. Your Discord name is used, no password needed.</p>
+    <p><a class="btn" href="/auth/login">Log in with Discord</a></p>
+  </section>
+
+  <section class="box" id="vote-box" hidden>
+    <div class="who"><span>Logged in as <b id="me"></b></span><button class="ghost sm" id="logout" type="button">Log out</button></div>
+    <h2>When can you come?</h2>
+    <p class="sub">One hour each. Tick all that work for you. Big numbers are your time, the row labels are Greek time (GR).</p>
+    <div class="grid-wrap"><table class="grid" id="pick"></table></div>
+    <div class="btns">
+      <button class="primary" id="save" type="button">Save my vote</button>
+      <button class="ghost" id="all" type="button">Tick all</button>
+      <button class="ghost" id="none" type="button">Clear</button>
+    </div>
+    <p class="msg" id="msg" aria-live="polite"></p>
+  </section>
+
+  <section class="box" id="results-box" hidden>
+    <h2>Results</h2>
+    <p class="sub" id="summary"></p>
+    <div class="bars" id="bars"></div>
+    <h3>By day and hour</h3>
+    <div class="grid-wrap"><table class="grid heat" id="heat"></table></div>
+    <p class="updated" id="updated"></p>
+  </section>
+
+  <details class="box admin">
+    <summary>Admin</summary>
+    <p class="sub">For the clan leader: see who voted and delete votes.</p>
+    <div class="key-row">
+      <label class="f" for="admin-key">Admin key<input class="text" type="password" id="admin-key" autocomplete="off"></label>
+      <button class="ghost" id="admin-load" type="button">Show votes</button>
+    </div>
+    <p class="msg" id="admin-msg" aria-live="polite"></p>
+    <div id="admin-out"></div>
+  </details>
+</main>
+</body>
+</html>

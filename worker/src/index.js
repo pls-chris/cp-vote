@@ -194,6 +194,15 @@ async function readJson(req) {
   try { return JSON.parse(text); } catch { throw new Error("Body is not valid JSON."); }
 }
 
+/* reading CP data needs the party key; wrong keys count against the rate limit */
+async function readGate(req, env, store) {
+  if (!env.PARTY_KEY) return json(env, req, 503, { error: "The server has no party key set." });
+  if (await keyOk(req.headers.get("X-Party-Key"), env.PARTY_KEY)) return null;
+  const ip = req.headers.get("CF-Connecting-IP") || "unknown";
+  if (!(await store.rateOk(ip))) return json(env, req, 429, { error: "Too many tries. Wait a minute." });
+  return json(env, req, 401, { error: "Party key needed." });
+}
+
 /* ---------------- router ---------------- */
 export default {
   async fetch(req, env) {
@@ -215,6 +224,7 @@ export default {
 
     if (base === "/api/schedule") {
       if (req.method === "GET" && tail === null) {
+        const deny = await readGate(req, env, store); if (deny) return deny;
         return json(env, req, 200, { members: members(env), schedule: await store.schedList() });
       }
       if (req.method === "PUT" && tail !== null) {
@@ -238,6 +248,7 @@ export default {
     }
 
     if (req.method === "GET" && tail === null) {
+      const deny = await readGate(req, env, store); if (deny) return deny;
       return json(env, req, 200, { members: members(env), votes: await store.list() });
     }
 
