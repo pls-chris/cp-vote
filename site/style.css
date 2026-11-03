@@ -126,3 +126,14 @@ input.num{width:4.2rem;padding:5px 6px}
 .pairs td.self{text-align:center;color:var(--muted)}
 .pairs th{white-space:nowrap}
 .check.sm{font-size:.85rem;gap:6px;align-items:center}.check.sm input{width:16px;height:16px;margin:0}
+
+/* round 2 */
+textarea.plain{font-family:inherit;font-size:.95rem;min-height:70px;margin-top:6px}
+.thought{display:block;font-size:.85rem;color:var(--muted);white-space:pre-wrap;margin-top:2px}
+.pv-tag{font-size:.72rem;padding:1px 6px;border-radius:3px;white-space:nowrap}
+.pv-tag.p-mage{color:var(--mage);border:1px solid var(--mage)}
+.pv-tag.p-melee{color:var(--melee);border:1px solid var(--melee)}
+tr.diff td{background:rgba(201,164,92,.12)}
+tr.diff td:first-child{box-shadow:inset 3px 0 0 var(--gold)}
+ol.rules{padding-left:22px}
+.breakdown .tag{vertical-align:-1px}

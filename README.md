@@ -5,7 +5,7 @@ author: Christoforos Pliatsikas
 
 # CP Lineup Vote
 
-Vote page for the L2 Reborn Legacy constant party. Members rank Mage / Melee / Archer, pick 2–3 classes for each, tick the support groups they are ok to play, and the page scores every lineup and shows who to recruit.
+Vote page for the L2 Reborn Legacy constant party. Round 2 (Nov 2026): Question 1 Melee farm vs Mage PvP, the decided melee lineup with a free-text box for second thoughts, and 1–3 mage class choices per member (or "won't play mage"). The page suggests the best mage lineups. Round 1 votes (Mage / Melee / Archer ranking) are kept in storage key `votes`, round 2 uses `votes2`.
 
 - **Page:** GitHub Pages (`site/`), plain HTML/CSS/JS.
 - **Votes:** a Cloudflare Worker (`worker/`) with one SQLite Durable Object. Free plan is enough.
@@ -72,6 +72,7 @@ The page is at `https://<your-github-user>.github.io/<repo-name>/`. Send that li
 - **Results** refresh by themselves every 15 seconds.
 - A member votes again with the same name to change his vote.
 - **New members:** edit `MEMBERS` in `worker/wrangler.toml` and push. The dropdown takes the list from the Worker.
+- **Melee lineup:** edit `MELEE` (`Name:Class,…`) in `worker/wrangler.toml` and push.
 - **Change the party key:** update the `PARTY_KEY` secret, then run **Deploy worker** again.
 
 ## Admin

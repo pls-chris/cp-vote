@@ -242,9 +242,10 @@ const fmtH=h=>h?(Number.isInteger(h)?h:h.toFixed(1))+"h":"";
 function windowCard(w){
   const votes=w.core.map(m=>votesById[key(m)]).filter(v=>v&&validVote(v));
   const noVote=w.core.filter(m=>!votesById[key(m)]);
+  const noMageW=votes.filter(v=>v.noMage).map(v=>v.name);
   const inWin=new Set([...w.core,...w.part.map(p=>p.m)]);
   let mage="";
-  if(votes.length){
+  if(votes.some(v=>!v.noMage)){
     const r=solve("mage",votes);
     const own=r.lineup.filter(x=>x.who).length, rec=r.lineup.filter(x=>!x.who).map(x=>x.slot.l);
     const lineup=r.lineup.map(x=>`<li><span>${esc(x.slot.l)}</span> ${x.who?esc(x.who.name)+(x.who.cls?" · "+esc(ABBR[x.who.cls]||x.who.cls):" · volunteer"):'<b class="rec">recruit</b>'}</li>`).join("");
@@ -259,6 +260,7 @@ function windowCard(w){
     ${w.part.length?`<p class="sub">Part of it: ${w.part.map(p=>esc(p.m)+" "+p.rs.map(r=>span(r[0],r[1])).join(", ")).join(" · ")}</p>`:""}
     ${missing.length?`<p class="sub">Not online: ${esc(missing.join(", "))}</p>`:""}
     ${mage}${noVote.length?`<p class="sub">No vote yet (not in the lineup): ${esc(noVote.join(", "))}</p>`:""}
+    ${noMageW.length?`<p class="sub">Won't play mage (not in the lineup): ${esc(noMageW.join(", "))}</p>`:""}
   </div>`;
 }
 

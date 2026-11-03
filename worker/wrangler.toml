@@ -6,7 +6,9 @@ compatibility_date = "2025-09-01"
 workers_dev = true
 
 [vars]
-MEMBERS = "kOsA,Ankalime,turambar,morrax,sinook,gx,morgx,eulogitos"
+MEMBERS = "Eulogitos,MorG,Turambar,Ankalime,Mitselis,Gx,Samanos,Stelios,Sinook"
+# Decided melee lineup, shown on the Vote/Results tabs (name:class, comma-separated)
+MELEE = "Eulogitos:Bishop,MorG:Elven Elder,Turambar:Tank,Ankalime:Summoner,Mitselis:Warcryer,Gx:Spoiler,Samanos:Swordsinger,Stelios:Bladedancer,Sinook:Destroyer"
 # Overwritten by the GitHub workflow from the PAGES_ORIGIN repo variable.
 # Comma-separate more than one origin if needed.
 ALLOWED_ORIGIN = "http://localhost:8000"

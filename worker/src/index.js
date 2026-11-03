@@ -7,24 +7,20 @@
  * each other).
  *
  * Secrets: PARTY_KEY (required), ADMIN_KEY (optional)
- * Vars:    MEMBERS, ALLOWED_ORIGIN
+ * Vars:    MEMBERS, MELEE, ALLOWED_ORIGIN
  */
 import { DurableObject } from "cloudflare:workers";
 
-const SUPPORT = ["Bladedancer", "Swordsinger", "Overlord", "Bishop", "Elven Elder", "Shillien Elder", "Warcryer", "Prophet"];
-const NUKERS = ["Sorcerer", "Necromancer", "Spellsinger", "Spellhowler"];
-const ARCHERS = ["Hawkeye", "Silver Ranger", "Phantom Ranger"];
-const TANKS = ["Paladin", "Dark Avenger", "Temple Knight", "Shillien Knight"];
-const DDS = ["Gladiator", "Warlord", "Treasure Hunter", "Plains Walker", "Abyss Walker", "Destroyer", "Tyrant", "Warlock",
-  "Elemental Summoner", "Phantom Summoner", "Bounty Hunter", "Warsmith"];
-// must match site/app.js
-const COMP_CLASSES = {
-  mage: new Set([...NUKERS, "Bladedancer", "Swordsinger", "Overlord", "Bishop", "Elven Elder", "Shillien Elder"]),
-  archer: new Set([...ARCHERS, ...TANKS, "Warlock", "Bladedancer", "Swordsinger", "Elven Elder", "Bishop", "Warcryer", "Prophet"]),
-  melee: new Set([...DDS, ...TANKS, "Bladedancer", "Swordsinger", "Bishop", "Warcryer", "Prophet", "Shillien Elder", "Elven Elder"]),
-};
-const TYPES = ["mage", "melee", "archer"];
-const VOL_KEYS = ["buff", "bard", "heal"];
+/* Round 2 (2026-11): Q1 melee farm vs mage PvP, fixed melee lineup with free-text
+   second thoughts, mage class preferences (up to 3) or "won't play mage".
+   Round 1 votes stay untouched in the storage key "votes". Must match site/app.js. */
+const MAGE_CLASSES = new Set(["Elven Elder", "Bishop", "Shillien Elder", "Overlord", "Swordsinger", "Bladedancer",
+  "Spellsinger", "Spellhowler", "Sorcerer", "Necromancer"]);
+const PARTIES = ["melee", "mage"];
+const VOTE_KEY = "votes2";
+const MAX_THOUGHTS = 600;
+// schedule entries saved under an old member name -> new name
+const RENAMED = { morgx: "MorG" };
 const MAX_BODY = 8 * 1024;
 const WRITE_LIMIT = 20;      // writes per IP ...
 const WRITE_WINDOW = 60_000; // ... per minute
@@ -36,25 +32,31 @@ export class VoteStore extends DurableObject {
     this.hits = new Map();
   }
   async list() {
-    return (await this.ctx.storage.get("votes")) || {};
+    return (await this.ctx.storage.get(VOTE_KEY)) || {};
   }
   async put(id, vote) {
     const votes = await this.list();
     votes[id] = vote;
-    await this.ctx.storage.put("votes", votes);
+    await this.ctx.storage.put(VOTE_KEY, votes);
   }
   async remove(id) {
     const votes = await this.list();
     if (id === null) {
-      await this.ctx.storage.put("votes", {});
+      await this.ctx.storage.put(VOTE_KEY, {});
     } else {
       delete votes[id];
-      await this.ctx.storage.put("votes", votes);
+      await this.ctx.storage.put(VOTE_KEY, votes);
     }
   }
   /* ---- schedule ---- */
   async schedList() {
     const all = (await this.ctx.storage.get("sched")) || {};
+    let moved = false;
+    for (const [from, to] of Object.entries(RENAMED)) {
+      const k = to.toLowerCase();
+      if (all[from] && !all[k]) { all[k] = { ...all[from], name: to }; delete all[from]; moved = true; }
+    }
+    if (moved) await this.ctx.storage.put("sched", all);
     const cutoff = isoDay(Date.now() - 2 * DAY_MS);
     for (const k of Object.keys(all)) {
       const o = all[k].overrides || {};
@@ -133,34 +135,24 @@ async function keyOk(given, expected) {
 
 function cleanVote(body, member) {
   if (!body || typeof body !== "object" || Array.isArray(body)) throw new Error("Vote must be a JSON object.");
-  const { rank, picks: picksIn, vol: volIn } = body;
-  if (!Array.isArray(rank) || rank.length !== 3 || [...rank].sort().join() !== [...TYPES].sort().join())
-    throw new Error("Rank all three party types, each one once.");
-  if (!picksIn || typeof picksIn !== "object") throw new Error("Class picks are missing.");
-  const picks = {};
-  for (const t of TYPES) {
-    const p = picksIn[t];
-    if (!Array.isArray(p) || p.length < 2 || p.length > 3) throw new Error(`Give 2 or 3 class picks for ${t}.`);
-    if (new Set(p).size !== p.length) throw new Error(`Same class picked twice for ${t}.`);
-    if (!p.every(c => typeof c === "string" && COMP_CLASSES[t].has(c))) throw new Error(`Unknown class in the ${t} picks.`);
-    picks[t] = p;
+  const party = body.party;
+  if (!PARTIES.includes(party)) throw new Error("Choose Melee farm or Mage PvP.");
+  let thoughts = typeof body.thoughts === "string" ? body.thoughts.replace(/\r/g, "").trim() : "";
+  if (thoughts.length > MAX_THOUGHTS) throw new Error(`Second thoughts: at most ${MAX_THOUGHTS} characters.`);
+  const noMage = !!body.noMage;
+  const mage = Array.isArray(body.mage) ? body.mage : [];
+  if (noMage) {
+    if (mage.length) throw new Error("You ticked that you won't play mage, so leave the mage choices empty.");
+  } else {
+    if (mage.length < 1 || mage.length > 3) throw new Error("Give 1 to 3 mage choices, or tick that you won't play mage.");
+    if (new Set(mage).size !== mage.length) throw new Error("Same class chosen twice.");
+    if (!mage.every(c => typeof c === "string" && MAGE_CLASSES.has(c))) throw new Error("Unknown class in the mage choices.");
   }
-  // support boxes per party type: { mage:{buff,bard,heal}, melee:{...}, archer:{...} }
-  // an older page sends one {buff,bard,heal} set: apply it to all three types
-  const src = volIn && typeof volIn === "object" ? volIn : {};
-  const legacy = VOL_KEYS.some(k => k in src);
-  const vol = {};
-  for (const t of TYPES) {
-    const g = legacy ? src : (src[t] && typeof src[t] === "object" ? src[t] : {});
-    vol[t] = {};
-    for (const k of VOL_KEYS) vol[t][k] = !!g[k];
-  }
-  // "1st = 2nd" box per party type
-  const eqIn = body.eq && typeof body.eq === "object" ? body.eq : {};
-  const eq = {};
-  for (const t of TYPES) eq[t] = !!eqIn[t];
-  return { name: member, rank, picks, vol, eq, ts: Date.now() };
+  return { name: member, party, thoughts, mage: noMage ? [] : mage, noMage, ts: Date.now() };
 }
+
+const melee = env => (env.MELEE || "").split(",").map(s => s.split(":").map(x => x.trim()))
+  .filter(p => p.length === 2 && p[0] && p[1]).map(([name, cls]) => ({ name, cls }));
 
 function corsHeaders(env, req) {
   const origin = req.headers.get("Origin");
@@ -249,7 +241,7 @@ export default {
 
     if (req.method === "GET" && tail === null) {
       const deny = await readGate(req, env, store); if (deny) return deny;
-      return json(env, req, 200, { members: members(env), votes: await store.list() });
+      return json(env, req, 200, { members: members(env), melee: melee(env), votes: await store.list() });
     }
 
     if (req.method === "PUT" && tail !== null) {

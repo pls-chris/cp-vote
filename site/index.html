@@ -19,7 +19,7 @@
 <div class="wrap">
   <header>
     <h1>CP Lineup Vote</h1>
-    <p>Pick the party type and the classes you want. The lineup with the best total score wins, and the empty slots are who we recruit.</p>
+    <p>Round 2: melee farm or mage PvP? The melee lineup is decided. For mage, tell us which classes you would play, and the page suggests the lineups.</p>
   </header>
 
   <div class="box" id="unlock" hidden>
@@ -53,20 +53,30 @@
     </div>
 
     <div class="box">
-      <h2>Party type</h2>
-      <p class="sub">Rank all three. 1st = 3 pts, 2nd = 2, 3rd = 1.</p>
-      <div class="grid3">
-        <label class="f" for="rank0">1st<select id="rank0"></select></label>
-        <label class="f" for="rank1">2nd<select id="rank1"></select></label>
-        <label class="f" for="rank2">3rd<select id="rank2"></select></label>
+      <h2>Question 1 · What do we play?</h2>
+      <div class="checks" role="radiogroup" aria-label="Party type">
+        <label class="check" for="party-melee"><input type="radio" name="party" id="party-melee" value="melee"><span><span class="tag t-melee"></span> <b>Melee farm</b> party</span></label>
+        <label class="check" for="party-mage"><input type="radio" name="party" id="party-mage" value="mage"><span><span class="tag t-mage"></span> <b>Mage PvP</b> party</span></label>
       </div>
     </div>
 
-    <div id="comp-boxes" class="stack"></div>
+    <div class="box card-melee">
+      <h2><span class="tag t-melee"></span>If we go Melee farm</h2>
+      <p class="sub">This lineup is decided.</p>
+      <div id="melee-lineup"></div>
+      <p class="sub" id="my-melee"></p>
+      <label class="f" for="thoughts">If you have second thoughts on your class, write them here (optional)
+        <textarea id="thoughts" class="plain" maxlength="600" placeholder="e.g. I can play the Tank, but I would prefer…"></textarea>
+      </label>
+      <p class="sub">Everybody with the party key can read this.</p>
+    </div>
 
-    <div class="box">
-      <h2>Support if needed</h2>
-      <p class="sub">Under each party type there are buffer / bard / healer boxes. Tick what you are ok to play <b>in that party type</b>, even if it's not in your picks. You can tick different things for Mage, Melee and Archer. If you get a slot from a tick box, you choose the class. See <button class="link" id="goto-rules">How it works</button>.</p>
+    <div class="box card-mage">
+      <h2><span class="tag t-mage"></span>If we go Mage PvP</h2>
+      <p class="sub">No lineup yet. Give <b>1 to 3 classes</b> you would play, best first. 9 places: <b>EE, BP, SE, OL, SWS, BD</b> (one of each) and <b>3 nukers</b> (SpS, SH, Sorc, Necro, any mix). More choices give the lineup more room.</p>
+      <div class="grid3" id="mage-picks"></div>
+      <label class="check" for="no-mage"><input type="checkbox" id="no-mage"><span>I <b>won't be playing in the mage CP at all</b>, if it comes to that.</span></label>
+      <p class="sub">How the page builds the mage lineups: <button class="link" id="goto-rules">How it works</button>.</p>
     </div>
 
     <div class="btns">
@@ -131,154 +141,80 @@
   <!-- HOW IT WORKS -->
   <section class="view" id="view-rules" hidden>
     <div class="box" lang="en">
-      <h2><span class="lang">EN</span>How the score works</h2>
-      <p class="sub">Every point goes to the total of a party type (Mage, Melee, Archer). Nobody collects personal points. Each party type is scored on its own, and the one with the highest total wins.</p>
+      <h2><span class="lang">EN</span>How round 2 works</h2>
+      <h3>Question 1: Melee farm or Mage PvP</h3>
       <ul class="rules">
-        <li>Party type vote: each member's ranking adds <b>3 / 2 / 1</b> to the three party types.</li>
-        <li>Class picks: for each party type, every member is placed in a slot from his own picks. A 1st pick adds <b>3</b> to that party type, a 2nd <b>2</b>, a 3rd <b>1</b>. WC and PP count the same.</li>
-        <li>Each lineup is built in this order of priority:
-          <ol>
-            <li><b>As few members without a slot as possible.</b></li>
-            <li><b>As many members as possible on their 1st pick.</b> If your 1st pick's slot is free, you get it. A support in your 2nd or 3rd pick, or a tick box, never moves you away from a free 1st pick.</li>
-            <li><b>Then the highest total points.</b> This is where empty support slots (−3) matter.</li>
-          </ol></li>
-        <li><b>Same slot as 1st pick</b> (for example one picks TK and the other Paladin, both go in the Tank slot): only one can have it. The slot goes to <b>whoever ranked that party type higher</b>, and the other moves to his next pick. If both ranked that party type the same, the page shows <b>roll /dice</b> next to both names and you roll in game.</li>
-        <li>Exception: if his next pick has no free slot but yours does, the slot goes to him and you take your next pick. This way nobody ends up without a slot, or on a 3rd pick, when it can be avoided.</li>
-        <li>Each support slot left empty: <b>−3</b> to that party type, because supports are hard to find.</li>
-        <li>Each member who fits in no slot from his picks: <b>−5</b> to that party type.</li>
-        <li>On equal totals, the party type with fewer empty support slots wins. If still equal, the one with more party type vote points wins.</li>
-        <li>The empty slots of the winning party type are the classes we recruit.</li>
+        <li>Every member has one vote. The Results tab shows the count and who voted what.</li>
+        <li>The <b>melee lineup is decided</b>. If you have second thoughts about your class, write them in the box. Everybody with the party key reads them, and we talk about it. They don't change any count.</li>
       </ul>
-      <h3>The "1st and 2nd pick are equal" box</h3>
+      <h3>Mage: your choices</h3>
       <ul class="rules">
-        <li>Each party type has this box. Tick it if your 1st and 2nd pick really don't matter to you.</li>
-        <li>Then <b>both count as a 1st pick</b>: both are protected and both add <b>+3</b>.</li>
-        <li>The page puts you where the party needs you more. If one of them fills a slot that would cost points when empty (a support, −3), you go there. If you can free your 1st pick's slot for someone who has it as his own 1st pick, you move to your 2nd. If nothing changes, you keep your 1st pick.</li>
+        <li>A mage party has 9 places: <b>EE, BP, SE, OL, SWS, BD</b> (one of each) and <b>3 nukers</b> in any mix of SpS, SH, Sorc and Necro (for example 2 Sorc + 1 Necro is fine).</li>
+        <li>Everybody gives <b>1 to 3 classes</b> he would play, best first, also the ones who voted Melee. We are 9, so we need everyone's choices to see if a mage party works.</li>
+        <li>No class is worth more than another. Only the order of <b>your own</b> choices counts.</li>
+        <li>If you tick <b>"I won't be playing in the mage CP at all"</b>, you are left out of the mage lineups and your place becomes a recruit.</li>
       </ul>
-      <p class="sub">Example (Mage): Player A picks SpS, then Necro. Player B picks SH. Player C picks Sorc, then BP. There are only two Nuker slots, so without the box Player C goes to BP (his 2nd pick). If Player A ticks the box, he moves to Necro and Player C gets Sorc, his 1st pick. BP then goes to the recruit list.</p>
-
-      <h3>Supports per party type</h3>
-      <p class="sub">The party types don't need the same number of supports. Each empty support slot is −3, so a party type with more supports starts further behind when nobody picks them.</p>
-      <div class="ex-wrap"><table class="ex">
-        <thead><tr><th></th><th>Support slots</th><th>Other slots</th></tr></thead>
-        <tbody>
-          <tr><td>Mage</td><td><b>6</b>: BD, SWS, OL, BP, EE, SE</td><td><b>3</b>: Necro, Nuker ×2</td></tr>
-          <tr><td>Melee</td><td><b>5</b>: BD, SWS, BP, WC/PP, SE/EE</td><td><b>4</b>: Tank, DD ×3</td></tr>
-          <tr><td>Archer</td><td><b>5</b>: BD, SWS, EE, BP, WC/PP</td><td><b>4</b>: Archer ×3, Archer / Warlock / Tank*</td></tr>
-        </tbody>
-      </table></div>
-      <p class="sub">* A tank in the Archer / Warlock / Tank slot must sub Warlock.</p>
-      <p class="sub">If nobody picks or ticks a support, Mage starts at −18 and Melee and Archer at −15. This 3-point handicap is one empty support slot. Mage also has only 3 non-support slots: one Necro and two Nuker (Sorc, SpS, SH). A 2nd member who wants Necro, or a 3rd who wants Sorc / SpS / SH, has no slot from that pick. This is on purpose: a mage party really needs one more support to recruit. If enough of you pick or tick Mage supports (for example OL, BP and SE), the handicap goes away.</p>
-
-      <h3>Can a party type with fewer votes still win?</h3>
-      <p class="sub">Yes. The type vote is only one part of the score. A party type that everybody wants can still lose if the class picks don't fit its slots, because empty supports and members without a slot cost points. The page picks the party type you want <b>and</b> can actually fill.</p>
-      <p class="sub">Example: all 6 rank Melee 1st and Archer last. In Melee everybody picks DD or Tank, in Archer two of them pick BD and SWS.</p>
-      <div class="ex-wrap"><table class="ex">
-        <thead><tr><th></th><th>Melee</th><th>Archer</th></tr></thead>
-        <tbody>
-          <tr><td>Type vote</td><td>6 × 3 = <b>18</b></td><td>6 × 1 = <b>6</b></td></tr>
-          <tr><td>Class picks</td><td>3 DD + 1 Tank fit: 4 × 3 = <b>12</b></td><td>4 archers + BD + SWS fit: 6 × 3 = <b>18</b></td></tr>
-          <tr><td>Without a slot</td><td>2 more DDs, no slot: <b>−10</b></td><td><b>0</b></td></tr>
-          <tr><td>Support gaps</td><td>BD, SWS, BP, WC/PP, SE/EE: <b>−15</b></td><td>EE, BP, WC/PP: <b>−9</b></td></tr>
-          <tr class="ex-total"><td>Total</td><td>5</td><td>15</td></tr>
-        </tbody>
-      </table></div>
-      <p class="sub">Archer wins 15 to 5. Melee would need 5 supports recruited, and 2 members would have no slot. As a rule of thumb, a 12-point lead from the type vote is worth about 4 empty support slots.</p>
-
-      <h3>The buffer / bard / healer boxes</h3>
-      <ul class="rules">
-        <li>The boxes are <b>per party type</b>. A tick under Melee counts only for Melee. With a tick you can be placed in an empty slot of the group you ticked, in that party type. That slot adds <b>0</b>, but the party type avoids the <b>−3</b> of the empty slot.</li>
-        <li>A tick does <b>not</b> put you in support for sure. If your <b>1st</b> pick's slot is free, you always stay there, because the 1st pick is protected.</li>
-        <li>If only your <b>2nd or 3rd</b> pick is free, you go to support. Your 2nd or 3rd pick would add +2 or +1, but filling an empty support slot removes its −3, which is the same as +3. So the party type's total is higher with you in support. This works the same in every party type.</li>
-        <li>If there is no slot from your picks at all, you go to support, and the party type avoids the −5.</li>
-        <li>If you get a slot from a tick box, <b>you choose the class</b> from the open slots of that group. Whatever is left, we recruit. If two volunteers are in the same group, you agree between you.</li>
-      </ul>
+      <h3>How the page builds the mage lineups</h3>
+      <p class="sub">It tries every possible placement and keeps the best, in this order:</p>
+      <ol class="rules">
+        <li><b>As few members without a place as possible.</b> Someone whose choices are all taken has no place, so this comes first.</li>
+        <li><b>As many members as possible on their 1st choice.</b></li>
+        <li><b>Then as many as possible on their 2nd choice.</b></li>
+        <li><b>A clash between a Mage voter and a Melee voter:</b> when two members want the same place at the same level (for example both have BP as 1st choice) and one voted <b>Mage PvP</b> and the other <b>Melee farm</b>, the <b>Mage voter yields</b> and plays his next choice. He gets the party type he wanted, so he can live with his 2nd choice; the Melee voter didn't want mage at all, so he gets the class he prefers.</li>
+        <li><b>Still equal</b> (both voted the same in Question 1): the page shows every equally good lineup, with the different places in gold. Agree between you, or <b>roll /dice</b> in game.</li>
+      </ol>
+      <p class="sub">Rules 1–3 come before rule 4. If the Mage voter's next choice is already taken by someone else, but the Melee voter's next choice is free, the Melee voter moves instead. Otherwise someone would end up on a 3rd choice or without a place, and the rules avoid that first.</p>
+      <p class="sub">Example: Player A voted Mage PvP and chose BP, then SE. Player B voted Melee farm and chose BP, then OL. Both 2nd choices are free, so both lineups have one member on a 1st and one on a 2nd choice. Rule 4 decides: B gets BP, A plays SE.</p>
+      <p class="sub">Empty places in the lineup are the classes we recruit. Under <b>Next best lineups</b> you see the closest alternatives, in case someone changes his mind.</p>
 
       <h3>Schedule</h3>
       <ul class="rules">
         <li>An L2 day runs <b>06:00 → 06:00</b>, so a night like 22:00–02:00 stays one session.</li>
-        <li>Each member enters times in <b>his own time zone</b> (for example one member in Prague, the rest in Athens). Everybody sees all hours converted to his own time zone.</li>
+        <li>Each member enters times in <b>his own time zone</b>. The page takes it from your PC; change it only if your PC is set wrong. Everybody sees all hours converted to his own time zone.</li>
         <li><b>Usual hours per weekday</b> repeat every week. Under <b>Next 7 days</b> you change only the days that differ, or mark <b>Can't play</b>. Tick <b>All day</b> if you can play the whole L2 day (06:00 → 06:00).</li>
         <li>For each day you see one row per member and an <b>online</b> row: gold means at least the number of people you chose in the filter.</li>
         <li><b>Windows</b> are stretches of 1 hour or more with enough people online. <b>Whole time</b> lists who is there from start to end, <b>Part of it</b> who joins or leaves.</li>
-        <li>For each window, the page builds the <b>Mage party</b> from the whole-time group, with the same rules as the vote, and shows which slots we must recruit. Members without a vote are not in that lineup.</li>
+        <li>For each window, the page builds the <b>Mage party</b> from the whole-time group, with the same rules as the mage lineups, and shows which places we must recruit. Members without a vote, or who won't play mage, are not in that lineup.</li>
         <li><b>Pair overlap</b> shows how many hours each two members can play together in the next 7 days.</li>
         <li>Days older than 2 days are deleted by themselves.</li>
       </ul>
     </div>
 
     <div class="box" lang="el">
-      <h2><span class="lang">EL</span>Πώς βγαίνει το σκορ</h2>
-      <p class="sub">Όλοι οι πόντοι πάνε στο σύνολο ενός τύπου party (Mage, Melee, Archer). Κανείς δεν μαζεύει προσωπικούς πόντους. Κάθε τύπος party βαθμολογείται χωριστά, και κερδίζει αυτός με το μεγαλύτερο σύνολο.</p>
+      <h2><span class="lang">EL</span>Πώς δουλεύει ο 2ος γύρος</h2>
+      <h3>Ερώτηση 1: Melee farm ή Mage PvP</h3>
       <ul class="rules">
-        <li>Ψήφος τύπου party: η σειρά κάθε μέλους δίνει <b>3 / 2 / 1</b> πόντους στους τρεις τύπους party.</li>
-        <li>Επιλογές class: σε κάθε τύπο party, κάθε μέλος μπαίνει σε θέση από τις δικές του επιλογές. Η 1η επιλογή δίνει <b>3</b> πόντους σε αυτόν τον τύπο party, η 2η <b>2</b>, η 3η <b>1</b>. Ο WC και ο PP μετράνε το ίδιο.</li>
-        <li>Κάθε lineup στήνεται με αυτή τη σειρά προτεραιότητας:
-          <ol>
-            <li><b>Όσο το δυνατόν λιγότερα μέλη χωρίς θέση.</b></li>
-            <li><b>Όσο το δυνατόν περισσότερα μέλη στην 1η τους επιλογή.</b> Αν η θέση της 1ης σου επιλογής είναι ελεύθερη, την παίρνεις. Ένα support στη 2η ή 3η επιλογή σου, ή ένα κουτάκι, δεν σε βγάζει ποτέ από ελεύθερη 1η επιλογή.</li>
-            <li><b>Μετά το μεγαλύτερο σύνολο πόντων.</b> Εδώ μετράνε οι κενές θέσεις support (−3).</li>
-          </ol></li>
-        <li><b>Ίδια θέση ως 1η επιλογή</b> (π.χ. ο ένας διαλέγει TK και ο άλλος Paladin, και οι δύο μπαίνουν στη θέση Tank): μόνο ένας μπορεί να την πάρει. Την παίρνει <b>όποιος έχει βάλει αυτόν τον τύπο party πιο ψηλά</b>, και ο άλλος πάει στην επόμενη επιλογή του. Αν τον έχουν βάλει και οι δύο στην ίδια θέση, η σελίδα γράφει <b>roll /dice</b> δίπλα στα δύο ονόματα και ρίχνετε ζάρι in game.</li>
-        <li>Εξαίρεση: αν για την επόμενη επιλογή του άλλου δεν υπάρχει ελεύθερη θέση, ενώ για τη δική σου υπάρχει, τη θέση την παίρνει αυτός και εσύ πας στην επόμενη επιλογή σου. Έτσι κανείς δεν μένει χωρίς θέση, ή σε 3η επιλογή, όταν γίνεται να αποφευχθεί.</li>
-        <li>Κάθε θέση support που μένει κενή: <b>−3</b> στον τύπο party, γιατί τα support βρίσκονται δύσκολα.</li>
-        <li>Κάθε μέλος που δεν χωράει σε καμία θέση από τις επιλογές του: <b>−5</b> στον τύπο party.</li>
-        <li>Σε ισοβαθμία κερδίζει ο τύπος party με τις λιγότερες κενές θέσεις support. Αν είναι πάλι ίσοι, κερδίζει αυτός με τους περισσότερους πόντους από την ψήφο τύπου party.</li>
-        <li>Οι κενές θέσεις του τύπου party που κερδίζει είναι τα classes που θα ψάξουμε.</li>
+        <li>Κάθε μέλος έχει μία ψήφο. Στο Results φαίνεται το σύνολο και τι ψήφισε ο καθένας.</li>
+        <li>Το <b>melee lineup είναι αποφασισμένο</b>. Αν έχεις δεύτερες σκέψεις για το class σου, γράψ' τες στο κουτί. Τις διαβάζουν όλοι όσοι έχουν το party key και το συζητάμε. Δεν αλλάζουν καμία μέτρηση.</li>
       </ul>
-      <h3>Το κουτάκι «η 1η και η 2η επιλογή είναι ίσες»</h3>
+      <h3>Mage: οι επιλογές σου</h3>
       <ul class="rules">
-        <li>Κάθε τύπος party έχει αυτό το κουτάκι. Τσέκαρέ το αν η 1η και η 2η επιλογή σου πραγματικά δεν σε νοιάζει ποια θα είναι.</li>
-        <li>Τότε <b>και οι δύο μετράνε ως 1η επιλογή</b>: προστατεύονται και οι δύο και δίνουν και οι δύο <b>+3</b>.</li>
-        <li>Η σελίδα σε βάζει εκεί που σε χρειάζεται περισσότερο το party. Αν η μία από τις δύο γεμίζει θέση που κοστίζει πόντους όταν μένει κενή (ένα support, −3), πας εκεί. Αν μπορείς να αφήσεις τη θέση της 1ης σου επιλογής σε κάποιον που την έχει δική του 1η επιλογή, πας στη 2η. Αν δεν αλλάζει τίποτα, κρατάς την 1η σου επιλογή.</li>
+        <li>Ένα mage party έχει 9 θέσεις: <b>EE, BP, SE, OL, SWS, BD</b> (ένα από το καθένα) και <b>3 nukers</b> σε οποιονδήποτε συνδυασμό από SpS, SH, Sorc και Necro (π.χ. 2 Sorc + 1 Necro είναι ok).</li>
+        <li>Όλοι δίνουν <b>1 έως 3 classes</b> που θα έπαιζαν, με σειρά προτίμησης, και όσοι ψήφισαν Melee. Είμαστε 9, οπότε χρειαζόμαστε τις επιλογές όλων για να δούμε αν βγαίνει mage party.</li>
+        <li>Κανένα class δεν αξίζει περισσότερο από άλλο. Μετράει μόνο η σειρά των <b>δικών σου</b> επιλογών.</li>
+        <li>Αν τσεκάρεις <b>«I won't be playing in the mage CP at all»</b>, δεν μπαίνεις στα mage lineups και η θέση σου γίνεται θέση που ψάχνουμε.</li>
       </ul>
-      <p class="sub">Παράδειγμα (Mage): ο Player A διαλέγει SpS και μετά Necro. Ο Player B διαλέγει SH. Ο Player C διαλέγει Sorc και μετά BP. Υπάρχουν μόνο δύο θέσεις Nuker, οπότε χωρίς το κουτάκι ο Player C πάει BP (η 2η του επιλογή). Αν ο Player A τσεκάρει το κουτάκι, πάει Necro και ο Player C παίρνει Sorc, την 1η του επιλογή. Το BP τότε πάει στη λίστα που ψάχνουμε.</p>
-
-      <h3>Support ανά τύπο party</h3>
-      <p class="sub">Οι τύποι party δεν χρειάζονται τον ίδιο αριθμό support. Κάθε κενή θέση support είναι −3, οπότε ένας τύπος party με περισσότερα support ξεκινάει πιο πίσω όταν δεν τα διαλέγει κανείς.</p>
-      <div class="ex-wrap"><table class="ex">
-        <thead><tr><th></th><th>Θέσεις support</th><th>Άλλες θέσεις</th></tr></thead>
-        <tbody>
-          <tr><td>Mage</td><td><b>6</b>: BD, SWS, OL, BP, EE, SE</td><td><b>3</b>: Necro, Nuker ×2</td></tr>
-          <tr><td>Melee</td><td><b>5</b>: BD, SWS, BP, WC/PP, SE/EE</td><td><b>4</b>: Tank, DD ×3</td></tr>
-          <tr><td>Archer</td><td><b>5</b>: BD, SWS, EE, BP, WC/PP</td><td><b>4</b>: Archer ×3, Archer / Warlock / Tank*</td></tr>
-        </tbody>
-      </table></div>
-      <p class="sub">* Ένας tank στη θέση Archer / Warlock / Tank πρέπει να κάνει sub Warlock.</p>
-      <p class="sub">Αν κανείς δεν διαλέξει ή τσεκάρει support, το Mage ξεκινάει από −18 και τα Melee και Archer από −15. Αυτό το μειονέκτημα των 3 πόντων είναι μία κενή θέση support. Το Mage έχει επίσης μόνο 3 θέσεις που δεν είναι support: μία Necro και δύο Nuker (Sorc, SpS, SH). Ένα 2ο μέλος που θέλει Necro, ή ένα 3ο που θέλει Sorc / SpS / SH, δεν βρίσκει θέση από αυτή την επιλογή. Είναι σκόπιμο: ένα mage party χρειάζεται πραγματικά να ψάξει ένα support παραπάνω. Αν αρκετοί από εσάς διαλέξετε ή τσεκάρετε support για το Mage (π.χ. OL, BP και SE), το μειονέκτημα φεύγει.</p>
-
-      <h3>Μπορεί να κερδίσει τύπος party με λιγότερες ψήφους;</h3>
-      <p class="sub">Ναι. Η ψήφος τύπου είναι μόνο ένα κομμάτι του σκορ. Ένας τύπος party που τον θέλουν όλοι μπορεί να χάσει αν οι επιλογές class δεν ταιριάζουν στις θέσεις του, γιατί τα κενά support και τα μέλη χωρίς θέση κοστίζουν πόντους. Η σελίδα διαλέγει τον τύπο party που θέλετε <b>και</b> μπορείτε πραγματικά να γεμίσετε.</p>
-      <p class="sub">Παράδειγμα: και οι 6 βάζουν Melee 1ο και Archer τελευταίο. Στο Melee όλοι διαλέγουν DD ή Tank, στο Archer δύο από αυτούς διαλέγουν BD και SWS.</p>
-      <div class="ex-wrap"><table class="ex">
-        <thead><tr><th></th><th>Melee</th><th>Archer</th></tr></thead>
-        <tbody>
-          <tr><td>Ψήφος τύπου</td><td>6 × 3 = <b>18</b></td><td>6 × 1 = <b>6</b></td></tr>
-          <tr><td>Επιλογές class</td><td>χωράνε 3 DD + 1 Tank: 4 × 3 = <b>12</b></td><td>χωράνε 4 archers + BD + SWS: 6 × 3 = <b>18</b></td></tr>
-          <tr><td>Χωρίς θέση</td><td>άλλοι 2 DD, χωρίς θέση: <b>−10</b></td><td><b>0</b></td></tr>
-          <tr><td>Κενά support</td><td>BD, SWS, BP, WC/PP, SE/EE: <b>−15</b></td><td>EE, BP, WC/PP: <b>−9</b></td></tr>
-          <tr class="ex-total"><td>Σύνολο</td><td>5</td><td>15</td></tr>
-        </tbody>
-      </table></div>
-      <p class="sub">Κερδίζει το Archer με 15 έναντι 5. Στο Melee θα έπρεπε να ψάξουμε 5 support, και 2 μέλη θα έμεναν χωρίς θέση. Πρακτικά, 12 πόντοι προβάδισμα από την ψήφο τύπου αξίζουν περίπου 4 κενές θέσεις support.</p>
-
-      <h3>Τα κουτάκια buffer / bard / healer</h3>
-      <ul class="rules">
-        <li>Τα κουτάκια είναι <b>ανά τύπο party</b>. Ένα τικ κάτω από το Melee μετράει μόνο για το Melee. Με τικ μπορείς να μπεις σε κενή θέση της ομάδας που τσέκαρες, σε αυτόν τον τύπο party. Η θέση αυτή δίνει <b>0</b> πόντους, αλλά ο τύπος party γλιτώνει το <b>−3</b> του κενού.</li>
-        <li>Το τικ <b>δεν</b> σε βάζει σίγουρα σε support. Αν η θέση της <b>1ης</b> σου επιλογής είναι ελεύθερη, μένεις πάντα εκεί, γιατί η 1η επιλογή προστατεύεται.</li>
-        <li>Αν ελεύθερη είναι μόνο η <b>2η ή 3η</b> σου επιλογή, μπαίνεις σε support. Η 2η ή 3η επιλογή σου θα έδινε +2 ή +1, ενώ αν γεμίσεις μια κενή θέση support φεύγει το −3 της, που είναι σαν +3. Άρα το σύνολο του τύπου party βγαίνει μεγαλύτερο με εσένα σε support. Αυτό ισχύει το ίδιο σε κάθε τύπο party.</li>
-        <li>Αν δεν υπάρχει θέση από τις επιλογές σου, μπαίνεις σε support και ο τύπος party γλιτώνει το −5.</li>
-        <li>Αν μπεις σε θέση από κουτάκι, <b>διαλέγεις εσύ το class</b> από τις θέσεις της ομάδας που είναι ακόμα ανοιχτές. Όσα μείνουν, τα ψάχνουμε. Αν είναι δύο εθελοντές στην ίδια ομάδα, τα βρίσκετε μεταξύ σας.</li>
-      </ul>
+      <h3>Πώς στήνει η σελίδα τα mage lineups</h3>
+      <p class="sub">Δοκιμάζει κάθε πιθανό στήσιμο και κρατάει το καλύτερο, με αυτή τη σειρά:</p>
+      <ol class="rules">
+        <li><b>Όσο το δυνατόν λιγότερα μέλη χωρίς θέση.</b> Όποιος έχει όλες τις επιλογές του πιασμένες μένει χωρίς θέση, γι' αυτό μετράει πρώτο.</li>
+        <li><b>Όσο το δυνατόν περισσότερα μέλη στην 1η τους επιλογή.</b></li>
+        <li><b>Μετά όσο το δυνατόν περισσότερα στη 2η τους επιλογή.</b></li>
+        <li><b>Σύγκρουση ανάμεσα σε ψηφοφόρο Mage και ψηφοφόρο Melee:</b> όταν δύο μέλη θέλουν την ίδια θέση στο ίδιο επίπεδο (π.χ. και οι δύο έχουν BP 1η επιλογή) και ο ένας ψήφισε <b>Mage PvP</b> και ο άλλος <b>Melee farm</b>, <b>υποχωρεί αυτός που ψήφισε Mage</b> και παίζει την επόμενη επιλογή του. Παίρνει τον τύπο party που ήθελε, οπότε μπορεί να ζήσει με τη 2η του επιλογή· αυτός που ψήφισε Melee δεν ήθελε καθόλου mage, οπότε παίρνει το class που προτιμάει.</li>
+        <li><b>Αν είναι ακόμα ίσοι</b> (ψήφισαν το ίδιο στην Ερώτηση 1): η σελίδα δείχνει όλα τα εξίσου καλά lineups, με τις θέσεις που αλλάζουν σε χρυσό. Τα βρίσκετε μεταξύ σας ή κάνετε <b>roll /dice</b> in game.</li>
+      </ol>
+      <p class="sub">Οι κανόνες 1–3 μετράνε πριν από τον 4. Αν η επόμενη επιλογή αυτού που ψήφισε Mage είναι ήδη πιασμένη από άλλον, ενώ του Melee είναι ελεύθερη, μετακινείται αυτός που ψήφισε Melee. Αλλιώς κάποιος θα έμενε σε 3η επιλογή ή χωρίς θέση, και οι κανόνες το αποφεύγουν αυτό πρώτα.</p>
+      <p class="sub">Παράδειγμα: ο Player A ψήφισε Mage PvP και διάλεξε BP και μετά SE. Ο Player B ψήφισε Melee farm και διάλεξε BP και μετά OL. Και οι δύο 2ες επιλογές είναι ελεύθερες, οπότε και τα δύο lineups έχουν ένα μέλος σε 1η και ένα σε 2η επιλογή. Αποφασίζει ο κανόνας 4: ο B παίρνει BP, ο A παίζει SE.</p>
+      <p class="sub">Οι κενές θέσεις του lineup είναι τα classes που ψάχνουμε. Στο <b>Next best lineups</b> βλέπεις τις πιο κοντινές εναλλακτικές, σε περίπτωση που κάποιος αλλάξει γνώμη.</p>
 
       <h3>Πρόγραμμα</h3>
       <ul class="rules">
         <li>Μια μέρα L2 είναι από <b>06:00 → 06:00</b>, οπότε ένα βράδυ όπως 22:00–02:00 μένει ένα session.</li>
-        <li>Κάθε μέλος βάζει ώρες στη <b>δική του ώρα</b> (π.χ. ένα μέλος σε ώρα Πράγας, οι υπόλοιποι σε ώρα Αθήνας). Ο καθένας βλέπει όλες τις ώρες μετατρεμμένες στη δική του ώρα.</li>
+        <li>Κάθε μέλος βάζει ώρες στη <b>δική του ώρα</b>. Η σελίδα την παίρνει από το PC σου· άλλαξέ την μόνο αν το PC σου έχει λάθος ώρα. Ο καθένας βλέπει όλες τις ώρες μετατρεμμένες στη δική του ώρα.</li>
         <li>Οι <b>συνηθισμένες ώρες ανά μέρα</b> επαναλαμβάνονται κάθε εβδομάδα. Στις <b>επόμενες 7 μέρες</b> αλλάζεις μόνο τις μέρες που διαφέρουν, ή βάζεις <b>Can't play</b>. Τσέκαρε <b>All day</b> αν μπορείς όλη τη μέρα L2 (06:00 → 06:00).</li>
         <li>Για κάθε μέρα βλέπεις μία γραμμή ανά μέλος και μια γραμμή <b>online</b>: χρυσό σημαίνει τουλάχιστον όσα άτομα έχεις βάλει στο φίλτρο.</li>
         <li>Τα <b>windows</b> είναι διαστήματα 1 ώρας και πάνω με αρκετά άτομα online. Το <b>Whole time</b> δείχνει ποιοι είναι εκεί από την αρχή ως το τέλος, το <b>Part of it</b> ποιοι μπαίνουν ή φεύγουν ενδιάμεσα.</li>
-        <li>Για κάθε window η σελίδα στήνει το <b>Mage party</b> με όσους είναι εκεί όλη την ώρα, με τους ίδιους κανόνες όπως στην ψήφο, και δείχνει ποιες θέσεις πρέπει να ψάξουμε. Όσοι δεν έχουν ψηφίσει δεν μπαίνουν σε αυτό το lineup.</li>
+        <li>Για κάθε window η σελίδα στήνει το <b>Mage party</b> με όσους είναι εκεί όλη την ώρα, με τους ίδιους κανόνες όπως στα mage lineups, και δείχνει ποιες θέσεις πρέπει να ψάξουμε. Όσοι δεν έχουν ψηφίσει, ή δεν θα παίξουν mage, δεν μπαίνουν σε αυτό το lineup.</li>
         <li>Το <b>Pair overlap</b> δείχνει πόσες ώρες μπορούν να παίξουν μαζί κάθε δύο μέλη τις επόμενες 7 μέρες.</li>
         <li>Μέρες παλαιότερες από 2 μέρες σβήνονται μόνες τους.</li>
       </ul>
