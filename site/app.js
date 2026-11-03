@@ -8,7 +8,9 @@ const ABBR = {"Elven Elder":"EE","Bishop":"BP","Shillien Elder":"SE","Overlord":
 const MAGE_SUP = ["Elven Elder","Bishop","Shillien Elder","Overlord","Swordsinger","Bladedancer"]; // one slot each
 const MAGE_NUK = ["Spellsinger","Spellhowler","Sorcerer","Necromancer"];                         // 3 slots, any mix
 const NUKER_SLOTS = 3;
-const PARTY = {melee:"Melee farm", mage:"Mage PvP"};
+const PARTY = {melee:"Melee farm", mage:"Mage PvP", any:"I really don't mind"};
+/* clash priority in the mage lineup: Melee voter keeps his choice, then "don't mind", the Mage voter yields first */
+const CLASH_W = {melee:2, any:1, mage:0};
 const ORD = ["1st","2nd","3rd"];
 const POLL_MS = 15000;
 const API = String(window.CP_API||"").replace(/\/+$/,"");
@@ -114,7 +116,7 @@ function readForm(){
   const partyKey=$("party-key").value.trim();
   if(!partyKey) return {err:"Type the party key. Ask the party leader for it."};
   const p=document.querySelector('input[name="party"]:checked');
-  if(!p) return {err:"Question 1: choose Melee farm or Mage PvP."};
+  if(!p) return {err:"Question 1: choose Melee farm, Mage PvP or I really don't mind."};
   const noMage=$("no-mage").checked;
   const mage=noMage?[]:[0,1,2].map(i=>$(`mage-${i}`).value).filter(Boolean);
   if(!noMage&&!mage.length) return {err:"Give at least one mage choice, or tick that you won't play in the mage party."};
@@ -150,14 +152,14 @@ async function submit(){
 /* ---------- mage lineup ---------- */
 /* Every possible placement is checked. Order of priority:
    1) fewest members without a slot  2) most on their 1st choice  3) most on their 2nd choice
-   4) melee voters get the better choice (a mage voter yields on a clash)  5) still equal -> agree or /dice */
+   4) on a clash: Melee voter > "don't mind" > Mage voter (the Mage voter yields)  5) still equal -> agree or /dice */
 function solveMage(votes){
   const ps=votes.filter(v=>validVote(v)&&!v.noMage);
   const n=ps.length, choice=new Array(n).fill(-1), top=[];
   let worst=-Infinity;
   const supUsed=new Set(); let nuk=0;
   const score=()=>{let un=0,n1=0,n2=0,me=0;
-    for(let i=0;i<n;i++){const k=choice[i];if(k<0){un++;continue}if(k===0)n1++;else if(k===1)n2++;if(ps[i].party==="melee")me+=3-k}
+    for(let i=0;i<n;i++){const k=choice[i];if(k<0){un++;continue}if(k===0)n1++;else if(k===1)n2++;me+=CLASH_W[ps[i].party]*(3-k)}
     return {s:-un*1e6+n1*1e4+n2*100+me,un,n1,n2,me}};
   const dfs=i=>{
     if(i===n){const sc=score();if(top.length<400||sc.s>=worst){top.push({...sc,ch:choice.slice()});
@@ -200,7 +202,7 @@ function lineupTable(L,ref){
   return `<table class="lineup"><tbody>${L.lineup.map((x,j)=>{
     if(!x.who) return `<tr><td>${esc(x.slot.l)}</td><td><span class="rec">Recruit</span></td><td></td></tr>`;
     const w=x.who, diff=ref&&!(ref.lineup[j].who&&ref.lineup[j].who.name===w.name&&ref.lineup[j].who.cls===w.cls);
-    return `<tr${diff?' class="diff"':""}><td>${esc(x.slot.l)}</td><td><b>${esc(w.name)}</b> · ${esc(ab(w.cls))}<br><span class="vol">${ORD[w.rank]} choice</span></td><td class="pts"><span class="pv-tag p-${w.party}">${w.party==="mage"?"voted Mage":"voted Melee"}</span></td></tr>`}).join("")}</tbody></table>`;
+    return `<tr${diff?' class="diff"':""}><td>${esc(x.slot.l)}</td><td><b>${esc(w.name)}</b> · ${esc(ab(w.cls))}<br><span class="vol">${ORD[w.rank]} choice</span></td><td class="pts"><span class="pv-tag p-${w.party}">${{mage:"voted Mage",melee:"voted Melee",any:"doesn't mind"}[w.party]}</span></td></tr>`}).join("")}</tbody></table>`;
 }
 function summary(L){
   const n3=L.lineup.filter(x=>x.who&&x.who.rank===2).length, rec=L.lineup.filter(x=>!x.who).length;
@@ -214,12 +216,14 @@ function render(){
   if(!votes.length){out.innerHTML=`<div class="box"><p class="empty">No votes yet. Results show up here after the first vote.</p></div>`;$("votes-table").innerHTML=`<p class="sub">Nothing yet.</p>`;return}
   const sortM=a=>a.sort((x,y)=>MEMBERS.indexOf(x.name)-MEMBERS.indexOf(y.name));
   const by=p=>sortM(votes.filter(v=>v.party===p)).map(v=>v.name);
-  const me=by("melee"), ma=by("mage");
+  const me=by("melee"), ma=by("mage"), an=by("any");
   const lead=me.length===ma.length?"Tie so far":(me.length>ma.length?PARTY.melee:PARTY.mage);
   let html=`<div class="box winner"><p class="sub">Question 1 · ${votes.length} of ${MEMBERS.length} voted${votes.length<MEMBERS.length?" · not final yet":""}</p>
     <p class="big">${esc(lead)}${me.length!==ma.length?` · ${Math.max(me.length,ma.length)} to ${Math.min(me.length,ma.length)}`:` · ${me.length} each`}</p>
     <div class="breakdown"><span><span class="tag t-melee"></span> Melee farm <b>${me.length}</b>: ${esc(me.join(", ")||"—")}</span>
-    <span><span class="tag t-mage"></span> Mage PvP <b>${ma.length}</b>: ${esc(ma.join(", ")||"—")}</span></div></div>`;
+    <span><span class="tag t-mage"></span> Mage PvP <b>${ma.length}</b>: ${esc(ma.join(", ")||"—")}</span>
+    <span><span class="tag t-any"></span> Don't mind <b>${an.length}</b>: ${esc(an.join(", ")||"—")}</span></div>
+    ${an.length?`<p class="sub">"I really don't mind" counts for neither side.</p>`:""}</div>`;
 
   const th=MELEE.map(x=>{const v=all[key(x.name)];return {x,t:v&&v.thoughts}});
   html+=`<div class="box card-melee"><h2><span class="tag t-melee"></span>Melee farm · decided lineup</h2>

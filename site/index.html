@@ -57,6 +57,7 @@
       <div class="checks" role="radiogroup" aria-label="Party type">
         <label class="check" for="party-melee"><input type="radio" name="party" id="party-melee" value="melee"><span><span class="tag t-melee"></span> <b>Melee farm</b> party</span></label>
         <label class="check" for="party-mage"><input type="radio" name="party" id="party-mage" value="mage"><span><span class="tag t-mage"></span> <b>Mage PvP</b> party</span></label>
+        <label class="check" for="party-any"><input type="radio" name="party" id="party-any" value="any"><span><span class="tag t-any"></span> <b>I really don't mind</b></span></label>
       </div>
     </div>
 
@@ -144,7 +145,7 @@
       <h2><span class="lang">EN</span>How round 2 works</h2>
       <h3>Question 1: Melee farm or Mage PvP</h3>
       <ul class="rules">
-        <li>Every member has one vote. The Results tab shows the count and who voted what.</li>
+        <li>Every member has one vote: <b>Melee farm</b>, <b>Mage PvP</b> or <b>I really don't mind</b>. The Results tab shows the count and who voted what. "I really don't mind" counts for neither side.</li>
         <li>The <b>melee lineup is decided</b>. If you have second thoughts about your class, write them in the box. Everybody with the party key reads them, and we talk about it. They don't change any count.</li>
       </ul>
       <h3>Mage: your choices</h3>
@@ -160,7 +161,7 @@
         <li><b>As few members without a place as possible.</b> Someone whose choices are all taken has no place, so this comes first.</li>
         <li><b>As many members as possible on their 1st choice.</b></li>
         <li><b>Then as many as possible on their 2nd choice.</b></li>
-        <li><b>A clash between a Mage voter and a Melee voter:</b> when two members want the same place at the same level (for example both have BP as 1st choice) and one voted <b>Mage PvP</b> and the other <b>Melee farm</b>, the <b>Mage voter yields</b> and plays his next choice. He gets the party type he wanted, so he can live with his 2nd choice; the Melee voter didn't want mage at all, so he gets the class he prefers.</li>
+        <li><b>A clash between voters of Question 1:</b> when two members want the same place at the same level (for example both have BP as 1st choice) and voted differently, the order is <b>Melee farm &gt; I really don't mind &gt; Mage PvP</b>: the <b>Mage voter yields</b> and plays his next choice. He gets the party type he wanted, so he can live with his 2nd choice; the Melee voter didn't want mage at all, so he gets the class he prefers. A "don't mind" voter yields to a Melee voter, and keeps his place against a Mage voter.</li>
         <li><b>Still equal</b> (both voted the same in Question 1): the page shows every equally good lineup, with the different places in gold. Agree between you, or <b>roll /dice</b> in game.</li>
       </ol>
       <p class="sub">Rules 1–3 come before rule 4. If the Mage voter's next choice is already taken by someone else, but the Melee voter's next choice is free, the Melee voter moves instead. Otherwise someone would end up on a 3rd choice or without a place, and the rules avoid that first.</p>
@@ -184,7 +185,7 @@
       <h2><span class="lang">EL</span>Πώς δουλεύει ο 2ος γύρος</h2>
       <h3>Ερώτηση 1: Melee farm ή Mage PvP</h3>
       <ul class="rules">
-        <li>Κάθε μέλος έχει μία ψήφο. Στο Results φαίνεται το σύνολο και τι ψήφισε ο καθένας.</li>
+        <li>Κάθε μέλος έχει μία ψήφο: <b>Melee farm</b>, <b>Mage PvP</b> ή <b>I really don't mind</b>. Στο Results φαίνεται το σύνολο και τι ψήφισε ο καθένας. Το «I really don't mind» δεν μετράει για καμία πλευρά.</li>
         <li>Το <b>melee lineup είναι αποφασισμένο</b>. Αν έχεις δεύτερες σκέψεις για το class σου, γράψ' τες στο κουτί. Τις διαβάζουν όλοι όσοι έχουν το party key και το συζητάμε. Δεν αλλάζουν καμία μέτρηση.</li>
       </ul>
       <h3>Mage: οι επιλογές σου</h3>
@@ -200,7 +201,7 @@
         <li><b>Όσο το δυνατόν λιγότερα μέλη χωρίς θέση.</b> Όποιος έχει όλες τις επιλογές του πιασμένες μένει χωρίς θέση, γι' αυτό μετράει πρώτο.</li>
         <li><b>Όσο το δυνατόν περισσότερα μέλη στην 1η τους επιλογή.</b></li>
         <li><b>Μετά όσο το δυνατόν περισσότερα στη 2η τους επιλογή.</b></li>
-        <li><b>Σύγκρουση ανάμεσα σε ψηφοφόρο Mage και ψηφοφόρο Melee:</b> όταν δύο μέλη θέλουν την ίδια θέση στο ίδιο επίπεδο (π.χ. και οι δύο έχουν BP 1η επιλογή) και ο ένας ψήφισε <b>Mage PvP</b> και ο άλλος <b>Melee farm</b>, <b>υποχωρεί αυτός που ψήφισε Mage</b> και παίζει την επόμενη επιλογή του. Παίρνει τον τύπο party που ήθελε, οπότε μπορεί να ζήσει με τη 2η του επιλογή· αυτός που ψήφισε Melee δεν ήθελε καθόλου mage, οπότε παίρνει το class που προτιμάει.</li>
+        <li><b>Σύγκρουση ανάμεσα σε ψήφους της Ερώτησης 1:</b> όταν δύο μέλη θέλουν την ίδια θέση στο ίδιο επίπεδο (π.χ. και οι δύο έχουν BP 1η επιλογή) και ψήφισαν διαφορετικά, η σειρά είναι <b>Melee farm &gt; I really don't mind &gt; Mage PvP</b>: <b>υποχωρεί αυτός που ψήφισε Mage</b> και παίζει την επόμενη επιλογή του. Παίρνει τον τύπο party που ήθελε, οπότε μπορεί να ζήσει με τη 2η του επιλογή· αυτός που ψήφισε Melee δεν ήθελε καθόλου mage, οπότε παίρνει το class που προτιμάει. Όποιος ψήφισε «don't mind» υποχωρεί σε αυτόν που ψήφισε Melee και κρατάει τη θέση του απέναντι σε αυτόν που ψήφισε Mage.</li>
         <li><b>Αν είναι ακόμα ίσοι</b> (ψήφισαν το ίδιο στην Ερώτηση 1): η σελίδα δείχνει όλα τα εξίσου καλά lineups, με τις θέσεις που αλλάζουν σε χρυσό. Τα βρίσκετε μεταξύ σας ή κάνετε <b>roll /dice</b> in game.</li>
       </ol>
       <p class="sub">Οι κανόνες 1–3 μετράνε πριν από τον 4. Αν η επόμενη επιλογή αυτού που ψήφισε Mage είναι ήδη πιασμένη από άλλον, ενώ του Melee είναι ελεύθερη, μετακινείται αυτός που ψήφισε Melee. Αλλιώς κάποιος θα έμενε σε 3η επιλογή ή χωρίς θέση, και οι κανόνες το αποφεύγουν αυτό πρώτα.</p>

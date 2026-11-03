@@ -133,6 +133,8 @@ textarea.plain{font-family:inherit;font-size:.95rem;min-height:70px;margin-top:6
 .pv-tag{font-size:.72rem;padding:1px 6px;border-radius:3px;white-space:nowrap}
 .pv-tag.p-mage{color:var(--mage);border:1px solid var(--mage)}
 .pv-tag.p-melee{color:var(--melee);border:1px solid var(--melee)}
+.t-any{background:var(--muted)}
+.pv-tag.p-any{color:var(--muted);border:1px solid var(--muted)}
 tr.diff td{background:rgba(201,164,92,.12)}
 tr.diff td:first-child{box-shadow:inset 3px 0 0 var(--gold)}
 ol.rules{padding-left:22px}

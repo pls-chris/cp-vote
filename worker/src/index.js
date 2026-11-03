@@ -16,7 +16,7 @@ import { DurableObject } from "cloudflare:workers";
    Round 1 votes stay untouched in the storage key "votes". Must match site/app.js. */
 const MAGE_CLASSES = new Set(["Elven Elder", "Bishop", "Shillien Elder", "Overlord", "Swordsinger", "Bladedancer",
   "Spellsinger", "Spellhowler", "Sorcerer", "Necromancer"]);
-const PARTIES = ["melee", "mage"];
+const PARTIES = ["melee", "mage", "any"];
 const VOTE_KEY = "votes2";
 const MAX_THOUGHTS = 600;
 // schedule entries saved under an old member name -> new name
@@ -136,7 +136,7 @@ async function keyOk(given, expected) {
 function cleanVote(body, member) {
   if (!body || typeof body !== "object" || Array.isArray(body)) throw new Error("Vote must be a JSON object.");
   const party = body.party;
-  if (!PARTIES.includes(party)) throw new Error("Choose Melee farm or Mage PvP.");
+  if (!PARTIES.includes(party)) throw new Error("Question 1: choose Melee farm, Mage PvP or I really don't mind.");
   let thoughts = typeof body.thoughts === "string" ? body.thoughts.replace(/\r/g, "").trim() : "";
   if (thoughts.length > MAX_THOUGHTS) throw new Error(`Second thoughts: at most ${MAX_THOUGHTS} characters.`);
   const noMage = !!body.noMage;
