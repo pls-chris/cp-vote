@@ -74,6 +74,71 @@ export class VoteStore extends DurableObject {
     if (id === null) await this.ctx.storage.put("sched", {});
     else { delete all[id]; await this.ctx.storage.put("sched", all); }
   }
+  /* ---- CP bank: one record per line, so no value ever gets big ---- */
+  async bankGet() {
+    const [entries, goals, audit] = await Promise.all([
+      this.ctx.storage.list({ prefix: "bank:e:" }),
+      this.ctx.storage.list({ prefix: "bank:g:" }),
+      this.ctx.storage.list({ prefix: "bank:a:", reverse: true, limit: AUDIT_SHOW }),
+    ]);
+    return {
+      settings: (await this.ctx.storage.get("bank:settings")) || DEFAULT_SETTINGS,
+      entries: [...entries.values()],
+      goals: [...goals.values()],
+      audit: [...audit.values()],
+    };
+  }
+  async bankOp(op, data) {
+    const st = this.ctx.storage, now = Date.now();
+    const log = async text => {
+      await st.put(`bank:a:${String(now).padStart(15, "0")}:${crypto.randomUUID().slice(0, 8)}`, { ts: now, text });
+      const all = await st.list({ prefix: "bank:a:", reverse: true });
+      const old = [...all.keys()].slice(AUDIT_KEEP);
+      if (old.length) await st.delete(old);
+    };
+    if (op === "entry.add") {
+      const n = (await st.list({ prefix: "bank:e:" })).size;
+      if (n >= MAX_ENTRIES) throw new Error(`The ledger is full (${MAX_ENTRIES} lines).`);
+      const e = { ...data, id: crypto.randomUUID(), created: now, void: null };
+      await st.put("bank:e:" + e.id, e);
+      await log(`Added ${e.type}: ${describe(e)}`);
+      return e;
+    }
+    if (op === "entry.void") {
+      const e = await st.get("bank:e:" + data.id);
+      if (!e) throw new Error("No such ledger line.");
+      if (e.void) throw new Error("This line is already voided.");
+      e.void = { ts: now, reason: data.reason };
+      await st.put("bank:e:" + e.id, e);
+      await log(`Voided ${e.type}: ${describe(e)} — ${data.reason}`);
+      return e;
+    }
+    if (op === "goal.save") {
+      const old = data.id ? await st.get("bank:g:" + data.id) : null;
+      if (data.id && !old) throw new Error("No such goal.");
+      const g = { ...(old || {}), ...data, id: data.id || crypto.randomUUID(), created: old ? old.created : now, updated: now };
+      if (!old) {
+        const goals = [...(await st.list({ prefix: "bank:g:" })).values()];
+        if (goals.length >= MAX_GOALS) throw new Error(`At most ${MAX_GOALS} goals.`);
+      }
+      await st.put("bank:g:" + g.id, g);
+      await log(`${old ? "Changed" : "Added"} goal "${g.title}" (${g.cost.toLocaleString("en")} adena, priority ${g.priority}, ${g.status})`);
+      return g;
+    }
+    if (op === "goal.delete") {
+      const g = await st.get("bank:g:" + data.id);
+      if (!g) throw new Error("No such goal.");
+      await st.delete("bank:g:" + data.id);
+      await log(`Deleted goal "${g.title}"`);
+      return { ok: true };
+    }
+    if (op === "settings.save") {
+      await st.put("bank:settings", data);
+      await log(`Settings: crystals ${Object.entries(data.crystal).map(([g, r]) => `${g} ${r[0]}–${r[1]}`).join(", ")}, shop tax ${data.tax}%`);
+      return data;
+    }
+    throw new Error("Unknown operation.");
+  }
   rateOk(ip) {
     const now = Date.now();
     const q = (this.hits.get(ip) || []).filter(t => now - t < WRITE_WINDOW);
@@ -83,6 +148,86 @@ export class VoteStore extends DurableObject {
     if (this.hits.size > 500) this.hits.clear();
     return true;
   }
+}
+
+/* ---------------- CP bank ---------------- */
+const BANK_TYPES = ["deposit", "income", "purchase", "handout", "sale", "adjust"];
+const GRADES = ["D", "C", "B", "A", "S"];
+const DEFAULT_SETTINGS = { crystal: { D: [520, 550], C: [0, 0], B: [0, 0], A: [0, 0], S: [0, 0] }, tax: 0 };
+const MAX_ADENA = 1e12, MAX_ENTRIES = 5000, MAX_GOALS = 200, AUDIT_KEEP = 300, AUDIT_SHOW = 100;
+const fmtA = n => Number(n).toLocaleString("en");
+const describe = e => [e.member, e.adena ? `${fmtA(e.adena)} adena` : "", e.item ? `${e.item.qty}× ${e.item.name} (${fmtA(e.item.value)})` : "",
+  e.note ? `"${e.note}"` : ""].filter(Boolean).join(" · ");
+
+const str = (v, max, what, required) => {
+  const t = typeof v === "string" ? v.replace(/[\r\n\t]+/g, " ").trim() : "";
+  if (required && !t) throw new Error(`${what} is missing.`);
+  if (t.length > max) throw new Error(`${what}: at most ${max} characters.`);
+  return t;
+};
+const int = (v, lo, hi, what) => {
+  if (!Number.isInteger(v) || v < lo || v > hi) throw new Error(`${what} must be a whole number from ${fmtA(lo)} to ${fmtA(hi)}.`);
+  return v;
+};
+function cleanItem(it) {
+  if (it === null || it === undefined) return null;
+  if (typeof it !== "object" || Array.isArray(it)) throw new Error("Bad item.");
+  return {
+    id: it.id === null || it.id === undefined ? null : int(it.id, 1, 100000, "Item id"),
+    name: str(it.name, 80, "Item name", true),
+    qty: int(it.qty, 1, 1e7, "Item quantity"),
+    value: int(it.value, 0, MAX_ADENA, "Item value"),
+  };
+}
+function cleanEntry(b, env) {
+  if (!b || typeof b !== "object" || Array.isArray(b)) throw new Error("Entry must be a JSON object.");
+  const type = b.type;
+  if (!BANK_TYPES.includes(type)) throw new Error("Unknown entry type.");
+  const date = str(b.date, 10, "Date", true);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || isNaN(Date.parse(date))) throw new Error("Date must be YYYY-MM-DD.");
+  const mem = str(b.member, 40, "Member", false);
+  const member = mem ? members(env).find(m => m.toLowerCase() === mem.toLowerCase()) : "";
+  if (mem && !member) throw new Error("Unknown member.");
+  const adena = type === "adjust" ? int(b.adena, -MAX_ADENA, MAX_ADENA, "Adena") : int(b.adena ?? 0, 0, MAX_ADENA, "Adena");
+  const item = cleanItem(b.item);
+  const note = str(b.note, 300, "Note", type === "adjust");
+  const goal = b.goal ? str(b.goal, 40, "Goal", false) : null;
+  const L = { deposit: "A deposit", income: "Party income", purchase: "A purchase", handout: "A hand-out", sale: "A sale", adjust: "A correction" }[type];
+  if (["deposit", "purchase", "handout"].includes(type) && !member) throw new Error(`${L} needs a member.`);
+  if (["income", "sale", "adjust"].includes(type) && member) throw new Error(`${L} belongs to the CP, leave the member empty.`);
+  if ((type === "deposit" || type === "income") && !adena && !item) throw new Error("Give adena, an item, or both.");
+  if (type === "purchase" && !adena) throw new Error("A purchase needs the adena it cost.");
+  if (type === "handout" && (!item || adena)) throw new Error("A hand-out gives an item from the warehouse (no adena).");
+  if (type === "sale" && (!item || !adena)) throw new Error("A sale needs the item sold and the adena it brought.");
+  if (type === "adjust" && (!adena || item)) throw new Error("An adjustment is adena only (+ or −), with a note why.");
+  return { type, date, member, adena, item, note, goal };
+}
+function cleanGoal(b, env) {
+  if (!b || typeof b !== "object" || Array.isArray(b)) throw new Error("Goal must be a JSON object.");
+  const mem = str(b.member, 40, "Member", false);
+  const member = mem ? members(env).find(m => m.toLowerCase() === mem.toLowerCase()) : "";
+  if (mem && !member) throw new Error("Unknown member.");
+  const status = b.status || "open";
+  if (!["open", "done", "dropped"].includes(status)) throw new Error("Bad goal status.");
+  const item = b.item ? { id: b.item.id ? int(b.item.id, 1, 100000, "Item id") : null, name: str(b.item.name, 80, "Item name", true) } : null;
+  return {
+    ...(b.id ? { id: str(b.id, 40, "Goal id", true) } : {}),
+    title: str(b.title, 80, "Goal title", true), item, member,
+    cost: int(b.cost, 1, MAX_ADENA, "Cost"), priority: int(b.priority, 1, 999, "Priority"), status,
+    note: str(b.note, 300, "Note", false),
+  };
+}
+function cleanSettings(b) {
+  if (!b || typeof b !== "object" || !b.crystal || typeof b.crystal !== "object") throw new Error("Bad settings.");
+  const crystal = {};
+  for (const g of GRADES) {
+    const r = b.crystal[g] || [0, 0];
+    if (!Array.isArray(r) || r.length !== 2) throw new Error(`Crystal ${g}: give min and max.`);
+    const [lo, hi] = [int(r[0], 0, 1e7, `Crystal ${g} min`), int(r[1], 0, 1e7, `Crystal ${g} max`)];
+    if (hi < lo) throw new Error(`Crystal ${g}: max is lower than min.`);
+    crystal[g] = [lo, hi];
+  }
+  return { crystal, tax: int(b.tax ?? 0, 0, 50, "Shop tax %") };
 }
 
 /* ---------------- helpers ---------------- */
@@ -159,7 +304,7 @@ function corsHeaders(env, req) {
   const allowed = (env.ALLOWED_ORIGIN || "").split(",").map(s => s.trim().replace(/\/$/, "")).filter(Boolean);
   const h = {
     "Vary": "Origin",
-    "Access-Control-Allow-Methods": "GET, PUT, DELETE, OPTIONS",
+    "Access-Control-Allow-Methods": "GET, PUT, POST, DELETE, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, X-Party-Key, X-Admin-Key",
     "Access-Control-Max-Age": "86400",
   };
@@ -205,6 +350,35 @@ export default {
 
     if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: corsHeaders(env, req) });
     if (path === "/healthz") return new Response("ok", { headers: { "Content-Type": "text/plain", ...corsHeaders(env, req) } });
+    if (path === "/api/bank") {
+      const ip = req.headers.get("CF-Connecting-IP") || "unknown";
+      const isAdmin = await keyOk(req.headers.get("X-Admin-Key"), env.ADMIN_KEY);
+      if (req.method === "GET") {
+        if (!isAdmin) { const deny = await readGate(req, env, store); if (deny) return deny; }
+        return json(env, req, 200, { members: members(env), admin: isAdmin, bank: await store.bankGet() });
+      }
+      if (req.method === "POST") {
+        if (!isAdmin) {
+          if (!(await store.rateOk(ip))) return err(429, "Too many tries. Wait a minute.");
+          return err(401, "Only the bank admin can change the bank (admin key).");
+        }
+        let body;
+        try { body = await readJson(req); } catch (e) { return err(400, e.message); }
+        const op = body && body.op;
+        try {
+          const data =
+            op === "entry.add" ? cleanEntry(body.entry, env) :
+            op === "entry.void" ? { id: str(body.id, 40, "Line id", true), reason: str(body.reason, 200, "Reason", true) } :
+            op === "goal.save" ? cleanGoal(body.goal, env) :
+            op === "goal.delete" ? { id: str(body.id, 40, "Goal id", true) } :
+            op === "settings.save" ? cleanSettings(body.settings) : null;
+          if (!data) return err(400, "Unknown operation.");
+          return json(env, req, 200, { ok: true, result: await store.bankOp(op, data) });
+        } catch (e) { return err(400, e.message || "Bad request."); }
+      }
+      return err(405, "Method not allowed.");
+    }
+
     const base = path.startsWith("/api/schedule") ? "/api/schedule" : path.startsWith("/api/votes") ? "/api/votes" : null;
     if (!base) return err(404, "Not found.");
 

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="author" content="Christoforos Pliatsikas">
 <meta name="robots" content="noindex,nofollow">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src https://*.workers.dev; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src https://*.workers.dev 'self'; base-uri 'none'; form-action 'none'">
 <title>CP Lineup Vote</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya+SC:wght@700&family=Alegreya+Sans:wght@400;500;700&display=swap">
@@ -14,6 +14,7 @@
 <script src="config.js"></script>
 <script src="app.js" defer></script>
 <script src="schedule.js" defer></script>
+<script src="bank.js" defer></script>
 </head>
 <body>
 <div class="wrap">
@@ -36,6 +37,7 @@
     <button class="tab" role="tab" id="tab-vote" aria-selected="true">Vote</button>
     <button class="tab" role="tab" id="tab-results" aria-selected="false">Results</button>
     <button class="tab" role="tab" id="tab-schedule" aria-selected="false">Schedule</button>
+    <button class="tab" role="tab" id="tab-bank" aria-selected="false">Bank</button>
     <button class="tab" role="tab" id="tab-rules" aria-selected="false">How it works</button>
   </nav>
 
@@ -140,6 +142,85 @@
   </section>
 
   <!-- HOW IT WORKS -->
+  <!-- BANK -->
+  <section class="view" id="view-bank" hidden>
+    <div class="box">
+      <h2>CP bank</h2>
+      <p class="sub">What everyone gave, what the CP bought for whom, what we hold, and how close we are to the next goals. Everyone in the CP can read it; only the bank admin can change it.</p>
+      <p class="sub" id="bank-status"></p>
+    </div>
+
+    <details class="box admin" id="bank-admin">
+      <summary>Bank admin <small id="bank-admin-state">Read only.</small></summary>
+      <div class="key-row" id="admin-key-row">
+        <label class="f" for="admin-key">Admin key<input class="text" type="password" id="admin-key" autocomplete="off"></label>
+        <button class="primary" id="admin-btn" type="button">Edit</button>
+      </div>
+      <button class="ghost" id="admin-lock" type="button" hidden>Stop editing in this browser</button>
+      <p class="msg" id="admin-msg" aria-live="polite"></p>
+
+      <div id="bank-admin-tools" hidden>
+        <details id="e-box" open>
+          <summary>Add a ledger line</summary>
+          <div class="grid3 g2">
+            <label class="f" for="e-type">Type<select id="e-type"></select></label>
+            <label class="f" for="e-date">Date<input class="text" type="date" id="e-date"></label>
+          </div>
+          <p class="sub" id="e-help"></p>
+          <div id="e-member-row"><label class="f" for="e-member">Member<select id="e-member"></select></label></div>
+          <div id="e-adena-row"><label class="f" id="e-adena-lab" for="e-adena">Adena<input class="text" id="e-adena" inputmode="decimal" placeholder="1500000, 1.5m or 200k" autocomplete="off"></label></div>
+          <div id="e-item-row">
+            <label class="f" id="e-item-lab" for="e-item">Item (optional)<input class="text" id="e-item" list="item-names" placeholder="Start typing an item name" autocomplete="off"></label>
+            <div class="grid3 g2">
+              <label class="f" for="e-qty">Quantity<input class="text" type="number" id="e-qty" min="1" value="1"></label>
+              <label class="f" for="e-value">Item value (adena, all of them)<input class="text" id="e-value" inputmode="decimal" placeholder="e.g. 950k" autocomplete="off"></label>
+            </div>
+            <p class="sub" id="e-hint"></p>
+          </div>
+          <label class="f" for="e-note">Note<input class="text" id="e-note" maxlength="300" placeholder="optional; required for a correction" autocomplete="off"></label>
+          <input type="hidden" id="e-goal">
+          <div class="btns"><button class="primary" id="e-save" type="button">Save line</button></div>
+          <p class="msg" id="e-msg" aria-live="polite"></p>
+        </details>
+
+        <details id="g-box">
+          <summary><span id="g-legend">New goal</span></summary>
+          <input type="hidden" id="g-id">
+          <label class="f" for="g-item">Item (optional, fills name and shop price)<input class="text" id="g-item" list="item-names" autocomplete="off"></label>
+          <label class="f" for="g-title">Goal<input class="text" id="g-title" maxlength="80" placeholder="e.g. Destroyer weapon for Sinook" autocomplete="off"></label>
+          <div class="grid3 g2">
+            <label class="f" for="g-member">For<select id="g-member"></select></label>
+            <label class="f" for="g-priority">Priority (1 = first)<input class="text" type="number" id="g-priority" min="1" max="999" value="1"></label>
+          </div>
+          <label class="f" for="g-cost">Cost (adena)<input class="text" id="g-cost" inputmode="decimal" placeholder="5000000 or 5m" autocomplete="off"></label>
+          <p class="sub" id="g-hint"></p>
+          <label class="f" for="g-note">Note<input class="text" id="g-note" maxlength="300" autocomplete="off"></label>
+          <div class="btns"><button class="primary" id="g-save" type="button">Save goal</button><button class="ghost" id="g-new" type="button">Clear</button></div>
+          <p class="msg" id="g-msg" aria-live="polite"></p>
+        </details>
+
+        <details>
+          <summary>Crystal prices and shop tax</summary>
+          <p class="sub">Today's market price per crystal (min–max). Item values in the bank use it. Leave a grade empty if nobody trades it.</p>
+          <div class="crys">
+            <span></span><b>min</b><b>max</b>
+            <span>D</span><input class="text" id="s-D-lo" inputmode="numeric"><input class="text" id="s-D-hi" inputmode="numeric">
+            <span>C</span><input class="text" id="s-C-lo" inputmode="numeric"><input class="text" id="s-C-hi" inputmode="numeric">
+            <span>B</span><input class="text" id="s-B-lo" inputmode="numeric"><input class="text" id="s-B-hi" inputmode="numeric">
+            <span>A</span><input class="text" id="s-A-lo" inputmode="numeric"><input class="text" id="s-A-hi" inputmode="numeric">
+            <span>S</span><input class="text" id="s-S-lo" inputmode="numeric"><input class="text" id="s-S-hi" inputmode="numeric">
+          </div>
+          <label class="f" for="s-tax">Shop tax % (castle tax added to NPC shop prices)<input class="text" type="number" id="s-tax" min="0" max="50" value="0"></label>
+          <div class="btns"><button class="primary" id="s-save" type="button">Save</button></div>
+          <p class="msg" id="s-msg" aria-live="polite"></p>
+        </details>
+      </div>
+    </details>
+
+    <div id="bank-out"></div>
+    <datalist id="item-names"></datalist><datalist id="item-names-wh"></datalist>
+  </section>
+
   <section class="view" id="view-rules" hidden>
     <div class="box" lang="en">
       <h2><span class="lang">EN</span>How round 2 works</h2>
@@ -167,6 +248,15 @@
       <p class="sub">Rules 1–3 come before rule 4. If the Mage voter's next choice is already taken by someone else, but the Melee voter's next choice is free, the Melee voter moves instead. Otherwise someone would end up on a 3rd choice or without a place, and the rules avoid that first.</p>
       <p class="sub">Example: Player A voted Mage PvP and chose BP, then SE. Player B voted Melee farm and chose BP, then OL. Both 2nd choices are free, so both lineups have one member on a 1st and one on a 2nd choice. Rule 4 decides: B gets BP, A plays SE.</p>
       <p class="sub">Empty places in the lineup are the classes we recruit. Under <b>Next best lineups</b> you see the closest alternatives, in case someone changes his mind.</p>
+
+      <h3>Bank</h3>
+      <ul class="rules">
+        <li>The <b>Bank</b> tab is the CP's book: every adena and item given, every drop that goes into the bank, and everything the CP bought or handed out for a member. Everyone with the party key can read it; only the bank admin can write.</li>
+        <li><b>Given</b> = adena + items, at the value written when they were given. <b>Received</b> = what the CP paid or handed out for that member. <b>Net</b> = given − received. Party drops count for the CP, not for one member.</li>
+        <li><b>Item value</b> = crystal value at today's crystal price (D grade and up), or what an NPC pays for NG items (half the base price). Shop prices are the NPC base price + shop tax.</li>
+        <li><b>Goals</b> are filled with the bank adena in priority order: goal 1 first, then what is left goes to goal 2, and so on. The light part of a bar shows how far we would get if we also sold the warehouse items.</li>
+        <li>Lines are never deleted, only <b>voided</b> with a reason, and every change is in the change log.</li>
+      </ul>
 
       <h3>Schedule</h3>
       <ul class="rules">
@@ -207,6 +297,15 @@
       <p class="sub">Οι κανόνες 1–3 μετράνε πριν από τον 4. Αν η επόμενη επιλογή αυτού που ψήφισε Mage είναι ήδη πιασμένη από άλλον, ενώ του Melee είναι ελεύθερη, μετακινείται αυτός που ψήφισε Melee. Αλλιώς κάποιος θα έμενε σε 3η επιλογή ή χωρίς θέση, και οι κανόνες το αποφεύγουν αυτό πρώτα.</p>
       <p class="sub">Παράδειγμα: ο Player A ψήφισε Mage PvP και διάλεξε BP και μετά SE. Ο Player B ψήφισε Melee farm και διάλεξε BP και μετά OL. Και οι δύο 2ες επιλογές είναι ελεύθερες, οπότε και τα δύο lineups έχουν ένα μέλος σε 1η και ένα σε 2η επιλογή. Αποφασίζει ο κανόνας 4: ο B παίρνει BP, ο A παίζει SE.</p>
       <p class="sub">Οι κενές θέσεις του lineup είναι τα classes που ψάχνουμε. Στο <b>Next best lineups</b> βλέπεις τις πιο κοντινές εναλλακτικές, σε περίπτωση που κάποιος αλλάξει γνώμη.</p>
+
+      <h3>Τράπεζα</h3>
+      <ul class="rules">
+        <li>Το tab <b>Bank</b> είναι το βιβλίο του CP: κάθε adena και item που δόθηκε, κάθε drop που μπαίνει στην τράπεζα, και ό,τι αγόρασε ή έδωσε το CP σε κάθε μέλος. Το διαβάζουν όλοι όσοι έχουν το party key· γράφει μόνο ο admin της τράπεζας.</li>
+        <li><b>Given</b> = adena + items, με την αξία που γράφτηκε όταν δόθηκαν. <b>Received</b> = ό,τι πλήρωσε ή έδωσε το CP σε αυτό το μέλος. <b>Net</b> = given − received. Τα drops του party μετράνε για το CP, όχι για ένα μέλος.</li>
+        <li><b>Αξία item</b> = αξία σε crystals με τη σημερινή τιμή crystal (από D grade και πάνω), ή ό,τι δίνει ο NPC για τα NG items (μισή base price). Οι τιμές shop είναι η base price του NPC + το shop tax.</li>
+        <li>Οι <b>στόχοι</b> γεμίζουν με τα adena της τράπεζας με σειρά προτεραιότητας: πρώτα ο στόχος 1, ό,τι περισσέψει πάει στον 2, κ.ο.κ. Το ανοιχτό κομμάτι της μπάρας δείχνει πόσο μακριά θα φτάναμε αν πουλούσαμε και τα items της αποθήκης.</li>
+        <li>Οι γραμμές δεν σβήνονται ποτέ, μόνο <b>ακυρώνονται (void)</b> με αιτία, και κάθε αλλαγή φαίνεται στο change log.</li>
+      </ul>
 
       <h3>Πρόγραμμα</h3>
       <ul class="rules">

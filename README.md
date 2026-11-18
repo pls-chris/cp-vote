@@ -72,6 +72,7 @@ The page is at `https://<your-github-user>.github.io/<repo-name>/`. Send that li
 - **Results** refresh by themselves every 15 seconds.
 - A member votes again with the same name to change his vote.
 - **New members:** edit `MEMBERS` in `worker/wrangler.toml` and push. The dropdown takes the list from the Worker.
+- **Bank tab:** CP ledger, warehouse, given/received per member and goals. `GET /api/bank` needs the party key (or admin key); every change is `POST /api/bank` with `X-Admin-Key` and an `op` (`entry.add`, `entry.void`, `goal.save`, `goal.delete`, `settings.save`). Item prices in `site/items.json` (NG + D, from the L2J Interlude datapack).
 - **Melee lineup:** edit `MELEE` (`Name:Class,…`) in `worker/wrangler.toml` and push.
 - **Change the party key:** update the `PARTY_KEY` secret, then run **Deploy worker** again.
 

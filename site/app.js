@@ -255,12 +255,14 @@ function render(){
 }
 
 /* ---------- tabs ---------- */
-const VIEWS=["vote","results","schedule","rules"];
+const VIEWS=["vote","results","schedule","bank","rules"];
 function show(which){
   if(!VIEWS.includes(which)) which="vote";
   VIEWS.forEach(v=>{$("tab-"+v).setAttribute("aria-selected",v===which);$("view-"+v).hidden=v!==which});
   if(which==="results") loadVotes();
   if(which==="schedule"&&window.schedShow) window.schedShow();
+  if(which==="bank"&&window.bankShow) window.bankShow();
+  document.querySelector(".wrap").classList.toggle("wide",which==="bank");
   store.set("cpTab",which);
 }
 
