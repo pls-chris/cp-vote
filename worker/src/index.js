@@ -19,8 +19,13 @@ const MAGE_CLASSES = new Set(["Elven Elder", "Bishop", "Shillien Elder", "Overlo
 const PARTIES = ["melee", "mage", "any"];
 const VOTE_KEY = "votes2";
 const MAX_THOUGHTS = 600;
-// schedule entries saved under an old member name -> new name
-const RENAMED = { morgx: "MorG" };
+// member renames: old name (lower case) -> new name. Saved votes, schedule hours and
+// bank lines/goals of the old name move to the new one the first time they are read.
+const RENAMED = {
+  morgx: "MorG",                                   // 2026-11-03
+  turambar: "Finduilas", gx: "Misa", mitselis: "Enyo",
+  samanos: "Gasoline", stelios: "BlackMamba",      // 2026-11-20
+};
 const MAX_BODY = 8 * 1024;
 const WRITE_LIMIT = 20;      // writes per IP ...
 const WRITE_WINDOW = 60_000; // ... per minute
@@ -31,7 +36,34 @@ export class VoteStore extends DurableObject {
     super(ctx, env);
     this.hits = new Map();
   }
+  /* move everything saved under an old member name to the new name (once per object start) */
+  async migrate() {
+    if (this.migrated) return;
+    const st = this.ctx.storage;
+    const moveMap = async key => {
+      const all = (await st.get(key)) || {};
+      let moved = false;
+      for (const [from, to] of Object.entries(RENAMED)) {
+        const k = to.toLowerCase();
+        if (all[from] && !all[k]) { all[k] = { ...all[from], name: to }; delete all[from]; moved = true; }
+      }
+      if (moved) await st.put(key, all);
+    };
+    await moveMap(VOTE_KEY);
+    await moveMap("sched");
+    for (const prefix of ["bank:e:", "bank:g:"]) {
+      const recs = await st.list({ prefix });
+      const changed = {};
+      for (const [k, r] of recs) {
+        const to = r.member && RENAMED[r.member.toLowerCase()];
+        if (to) changed[k] = { ...r, member: to };
+      }
+      if (Object.keys(changed).length) await st.put(changed);
+    }
+    this.migrated = true;
+  }
   async list() {
+    await this.migrate();
     return (await this.ctx.storage.get(VOTE_KEY)) || {};
   }
   async put(id, vote) {
@@ -50,13 +82,8 @@ export class VoteStore extends DurableObject {
   }
   /* ---- schedule ---- */
   async schedList() {
+    await this.migrate();
     const all = (await this.ctx.storage.get("sched")) || {};
-    let moved = false;
-    for (const [from, to] of Object.entries(RENAMED)) {
-      const k = to.toLowerCase();
-      if (all[from] && !all[k]) { all[k] = { ...all[from], name: to }; delete all[from]; moved = true; }
-    }
-    if (moved) await this.ctx.storage.put("sched", all);
     const cutoff = isoDay(Date.now() - 2 * DAY_MS);
     for (const k of Object.keys(all)) {
       const o = all[k].overrides || {};
@@ -76,6 +103,7 @@ export class VoteStore extends DurableObject {
   }
   /* ---- CP bank: one record per line, so no value ever gets big ---- */
   async bankGet() {
+    await this.migrate();
     const [entries, goals, audit] = await Promise.all([
       this.ctx.storage.list({ prefix: "bank:e:" }),
       this.ctx.storage.list({ prefix: "bank:g:" }),
@@ -89,6 +117,7 @@ export class VoteStore extends DurableObject {
     };
   }
   async bankOp(op, data) {
+    await this.migrate();
     const st = this.ctx.storage, now = Date.now();
     const log = async text => {
       await st.put(`bank:a:${String(now).padStart(15, "0")}:${crypto.randomUUID().slice(0, 8)}`, { ts: now, text });
