@@ -10,6 +10,7 @@ const TYPES = {
   purchase:{l:"Purchase", d:"the CP pays adena for gear for a member"},
   handout:{l:"Hand-out", d:"an item from the warehouse goes to a member"},
   sale:   {l:"Sale",     d:"an item from the warehouse is sold for adena"},
+  expense:{l:"General expense", d:"adena the CP spends for nobody in particular: shots, scrolls, misc. The note is optional"},
   adjust: {l:"Correction", d:"fix the adena balance (+ or −), with a note why"},
 };
 const GR = ["D","C","B","A","S"];
@@ -75,7 +76,7 @@ function msg(id,t,bad){const m=$(id);if(!m)return;m.className="msg "+(bad?"err":
 /* ---------- derived state ---------- */
 function compute(){
   const live=B.data.entries.filter(e=>!e.void).sort((a,b)=>a.date.localeCompare(b.date)||a.created-b.created);
-  let bal=0,income=0; const per={}, stock=new Map(), series=[];
+  let bal=0,income=0,expenses=0; const per={}, stock=new Map(), series=[];
   MEMBERS.forEach(m=>per[m]={given:0,gA:0,gI:0,recv:0,last:""});
   const P=m=>per[m]||(per[m]={given:0,gA:0,gI:0,recv:0,last:""});
   const sk=it=>it.id?"#"+it.id:"n:"+it.name.toLowerCase();
@@ -89,6 +90,7 @@ function compute(){
     else if(e.type==="purchase"){bal-=a;const p=P(e.member);p.recv+=a;p.last=e.date}
     else if(e.type==="handout"){const p=P(e.member);p.recv+=e.item.value;addStock(e.item,-1);p.last=e.date}
     else if(e.type==="sale"){bal+=a;addStock(e.item,-1)}
+    else if(e.type==="expense"){bal-=a;expenses+=a}
     else if(e.type==="adjust"){bal+=a}
     const L=series[series.length-1]; if(L&&L[0]===e.date)L[1]=bal; else series.push([e.date,bal]);
   }
@@ -99,7 +101,7 @@ function compute(){
   let left=Math.max(0,bal), leftStock=Math.max(0,bal)+whLo;
   const goals=open.map(g=>{const f=Math.min(g.cost,left);left-=f;const fs=Math.min(g.cost,leftStock);leftStock-=fs;
     return {...g,funded:f,missing:g.cost-f,pct:g.cost?f/g.cost:0,pctStock:g.cost?fs/g.cost:0}});
-  return {bal,income,per,wh,whLo,whHi,goals,series,live};
+  return {bal,income,expenses,per,wh,whLo,whHi,goals,series,live};
 }
 
 /* ---------- render ---------- */
@@ -117,6 +119,7 @@ function render(){
     <div class="kpi"><span>Warehouse items</span><b>${c.whLo===c.whHi?A(c.whLo):`${A(c.whLo)}–${A(c.whHi)}`}</b><small>${c.wh.length} kinds</small></div>
     <div class="kpi"><span>Total value</span><b>${A(c.bal+c.whLo)}${c.whHi>c.whLo?`<small>–${short(c.bal+c.whHi)}</small>`:""}</b></div>
     <div class="kpi"><span>Party income</span><b>${A(c.income)}</b><small>drops & spoil</small></div>
+    <div class="kpi"><span>General expenses</span><b>${A(c.expenses)}</b><small>shots, misc</small></div>
   </div>`;
   if(next) h+=`<div class="box winner"><p class="sub">Next goal${next.member?` · for ${esc(next.member)}`:""}</p>
     <p class="big">${esc(next.title)}</p>${bar(next)}
@@ -168,7 +171,7 @@ function chartBox(c){
 function ledgerBox(c){
   const f=B.filter, all=B.data.entries.slice().sort((a,b)=>b.date.localeCompare(a.date)||b.created-a.created)
     .filter(e=>(!f.member||e.member===f.member)&&(!f.type||e.type===f.type));
-  const sign=e=>({deposit:1,income:1,sale:1,purchase:-1,handout:0,adjust:Math.sign(e.adena)})[e.type];
+  const sign=e=>({deposit:1,income:1,sale:1,purchase:-1,handout:0,expense:-1,adjust:Math.sign(e.adena)})[e.type];
   return `<div class="box"><h2>Ledger</h2>
     <div class="filters"><select id="lf-member"><option value="">All members</option>${MEMBERS.map(m=>`<option${f.member===m?" selected":""}>${esc(m)}</option>`).join("")}</select>
     <select id="lf-type"><option value="">All types</option>${Object.entries(TYPES).map(([k,t])=>`<option value="${k}"${f.type===k?" selected":""}>${t.l}</option>`).join("")}</select>
@@ -202,10 +205,10 @@ function auditBox(){
 function syncEntryForm(){
   const t=$("e-type").value, d=TYPES[t];
   $("e-help").textContent=d.d+".";
-  const needM=["deposit","purchase","handout"].includes(t), noM=["income","sale","adjust"].includes(t);
-  $("e-member-row").hidden=noM; $("e-item-row").hidden=t==="adjust";
+  const needM=["deposit","purchase","handout"].includes(t), noM=["income","sale","expense","adjust"].includes(t);
+  $("e-member-row").hidden=noM; $("e-item-row").hidden=t==="adjust"||t==="expense";
   $("e-adena-row").hidden=t==="handout";
-  $("e-adena-lab").firstChild.textContent={purchase:"Cost (adena)",sale:"Sold for (adena)",adjust:"Adena (+ or −)"}[t]||"Adena";
+  $("e-adena-lab").firstChild.textContent={purchase:"Cost (adena)",sale:"Sold for (adena)",expense:"Spent (adena)",adjust:"Adena (+ or −)"}[t]||"Adena";
   $("e-item-lab").firstChild.textContent={purchase:"What was bought (optional, for the record)",handout:"Item from the warehouse",sale:"Item sold"}[t]||"Item (optional)";
   if(needM&&!$("e-member").value) $("e-member").value="";
   if(t==="handout"||t==="sale"){$("item-names-wh").innerHTML=(B.c?B.c.wh:[]).map(s=>`<option value="${esc(s.item.name)}">${fmt(s.qty)} in warehouse</option>`).join("");$("e-item").setAttribute("list","item-names-wh")}
@@ -228,7 +231,7 @@ async function saveEntry(){
   const adena=t==="handout"?0:parseAdena($("e-adena").value);
   if(Number.isNaN(adena)) return msg("e-msg","Adena: write a number like 1500000, 1.5m or 200k.",true);
   let item=null;
-  if(name&&t!=="adjust"){
+  if(name&&t!=="adjust"&&t!=="expense"){
     const value=parseAdena($("e-value").value), qty=parseInt($("e-qty").value,10);
     if(!Number.isInteger(qty)||qty<1) return msg("e-msg","Quantity must be 1 or more.",true);
     if(Number.isNaN(value)) return msg("e-msg","Item value: write a number like 950000 or 950k.",true);

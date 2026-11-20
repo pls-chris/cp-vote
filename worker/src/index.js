@@ -180,7 +180,7 @@ export class VoteStore extends DurableObject {
 }
 
 /* ---------------- CP bank ---------------- */
-const BANK_TYPES = ["deposit", "income", "purchase", "handout", "sale", "adjust"];
+const BANK_TYPES = ["deposit", "income", "purchase", "handout", "sale", "expense", "adjust"];
 const GRADES = ["D", "C", "B", "A", "S"];
 const DEFAULT_SETTINGS = { crystal: { D: [520, 550], C: [0, 0], B: [0, 0], A: [0, 0], S: [0, 0] }, tax: 0 };
 const MAX_ADENA = 1e12, MAX_ENTRIES = 5000, MAX_GOALS = 200, AUDIT_KEEP = 300, AUDIT_SHOW = 100;
@@ -221,13 +221,14 @@ function cleanEntry(b, env) {
   const item = cleanItem(b.item);
   const note = str(b.note, 300, "Note", type === "adjust");
   const goal = b.goal ? str(b.goal, 40, "Goal", false) : null;
-  const L = { deposit: "A deposit", income: "Party income", purchase: "A purchase", handout: "A hand-out", sale: "A sale", adjust: "A correction" }[type];
+  const L = { deposit: "A deposit", income: "Party income", purchase: "A purchase", handout: "A hand-out", sale: "A sale", expense: "A general expense", adjust: "A correction" }[type];
   if (["deposit", "purchase", "handout"].includes(type) && !member) throw new Error(`${L} needs a member.`);
-  if (["income", "sale", "adjust"].includes(type) && member) throw new Error(`${L} belongs to the CP, leave the member empty.`);
+  if (["income", "sale", "expense", "adjust"].includes(type) && member) throw new Error(`${L} belongs to the CP, leave the member empty.`);
   if ((type === "deposit" || type === "income") && !adena && !item) throw new Error("Give adena, an item, or both.");
   if (type === "purchase" && !adena) throw new Error("A purchase needs the adena it cost.");
   if (type === "handout" && (!item || adena)) throw new Error("A hand-out gives an item from the warehouse (no adena).");
   if (type === "sale" && (!item || !adena)) throw new Error("A sale needs the item sold and the adena it brought.");
+  if (type === "expense" && (!adena || item)) throw new Error("A general expense needs the adena spent, and no item.");
   if (type === "adjust" && (!adena || item)) throw new Error("An adjustment is adena only (+ or −), with a note why.");
   return { type, date, member, adena, item, note, goal };
 }
